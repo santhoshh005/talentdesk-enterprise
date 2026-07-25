@@ -11,10 +11,13 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppResumeAnalyzerRouteImport } from './routes/_app.resume-analyzer'
 import { Route as AppRecruitmentRouteImport } from './routes/_app.recruitment'
 import { Route as AppJobsRouteImport } from './routes/_app.jobs'
+import { Route as AppJdGeneratorRouteImport } from './routes/_app.jd-generator'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppCandidatesRouteImport } from './routes/_app.candidates'
+import { Route as AppCandidateMatchRouteImport } from './routes/_app.candidate-match'
 
 const AppRoute = AppRouteImport.update({
   id: '/_app',
@@ -25,6 +28,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppResumeAnalyzerRoute = AppResumeAnalyzerRouteImport.update({
+  id: '/resume-analyzer',
+  path: '/resume-analyzer',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppRecruitmentRoute = AppRecruitmentRouteImport.update({
   id: '/recruitment',
   path: '/recruitment',
@@ -33,6 +41,11 @@ const AppRecruitmentRoute = AppRecruitmentRouteImport.update({
 const AppJobsRoute = AppJobsRouteImport.update({
   id: '/jobs',
   path: '/jobs',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppJdGeneratorRoute = AppJdGeneratorRouteImport.update({
+  id: '/jd-generator',
+  path: '/jd-generator',
   getParentRoute: () => AppRoute,
 } as any)
 const AppDashboardRoute = AppDashboardRouteImport.update({
@@ -45,43 +58,76 @@ const AppCandidatesRoute = AppCandidatesRouteImport.update({
   path: '/candidates',
   getParentRoute: () => AppRoute,
 } as any)
+const AppCandidateMatchRoute = AppCandidateMatchRouteImport.update({
+  id: '/candidate-match',
+  path: '/candidate-match',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/candidate-match': typeof AppCandidateMatchRoute
   '/candidates': typeof AppCandidatesRoute
   '/dashboard': typeof AppDashboardRoute
+  '/jd-generator': typeof AppJdGeneratorRoute
   '/jobs': typeof AppJobsRoute
   '/recruitment': typeof AppRecruitmentRoute
+  '/resume-analyzer': typeof AppResumeAnalyzerRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/candidate-match': typeof AppCandidateMatchRoute
   '/candidates': typeof AppCandidatesRoute
   '/dashboard': typeof AppDashboardRoute
+  '/jd-generator': typeof AppJdGeneratorRoute
   '/jobs': typeof AppJobsRoute
   '/recruitment': typeof AppRecruitmentRoute
+  '/resume-analyzer': typeof AppResumeAnalyzerRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
+  '/_app/candidate-match': typeof AppCandidateMatchRoute
   '/_app/candidates': typeof AppCandidatesRoute
   '/_app/dashboard': typeof AppDashboardRoute
+  '/_app/jd-generator': typeof AppJdGeneratorRoute
   '/_app/jobs': typeof AppJobsRoute
   '/_app/recruitment': typeof AppRecruitmentRoute
+  '/_app/resume-analyzer': typeof AppResumeAnalyzerRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/candidates' | '/dashboard' | '/jobs' | '/recruitment'
+  fullPaths:
+    | '/'
+    | '/candidate-match'
+    | '/candidates'
+    | '/dashboard'
+    | '/jd-generator'
+    | '/jobs'
+    | '/recruitment'
+    | '/resume-analyzer'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/candidates' | '/dashboard' | '/jobs' | '/recruitment'
+  to:
+    | '/'
+    | '/candidate-match'
+    | '/candidates'
+    | '/dashboard'
+    | '/jd-generator'
+    | '/jobs'
+    | '/recruitment'
+    | '/resume-analyzer'
   id:
     | '__root__'
     | '/'
     | '/_app'
+    | '/_app/candidate-match'
     | '/_app/candidates'
     | '/_app/dashboard'
+    | '/_app/jd-generator'
     | '/_app/jobs'
     | '/_app/recruitment'
+    | '/_app/resume-analyzer'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -105,6 +151,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/resume-analyzer': {
+      id: '/_app/resume-analyzer'
+      path: '/resume-analyzer'
+      fullPath: '/resume-analyzer'
+      preLoaderRoute: typeof AppResumeAnalyzerRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/recruitment': {
       id: '/_app/recruitment'
       path: '/recruitment'
@@ -117,6 +170,13 @@ declare module '@tanstack/react-router' {
       path: '/jobs'
       fullPath: '/jobs'
       preLoaderRoute: typeof AppJobsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/jd-generator': {
+      id: '/_app/jd-generator'
+      path: '/jd-generator'
+      fullPath: '/jd-generator'
+      preLoaderRoute: typeof AppJdGeneratorRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/dashboard': {
@@ -133,21 +193,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCandidatesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/candidate-match': {
+      id: '/_app/candidate-match'
+      path: '/candidate-match'
+      fullPath: '/candidate-match'
+      preLoaderRoute: typeof AppCandidateMatchRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
 interface AppRouteChildren {
+  AppCandidateMatchRoute: typeof AppCandidateMatchRoute
   AppCandidatesRoute: typeof AppCandidatesRoute
   AppDashboardRoute: typeof AppDashboardRoute
+  AppJdGeneratorRoute: typeof AppJdGeneratorRoute
   AppJobsRoute: typeof AppJobsRoute
   AppRecruitmentRoute: typeof AppRecruitmentRoute
+  AppResumeAnalyzerRoute: typeof AppResumeAnalyzerRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppCandidateMatchRoute: AppCandidateMatchRoute,
   AppCandidatesRoute: AppCandidatesRoute,
   AppDashboardRoute: AppDashboardRoute,
+  AppJdGeneratorRoute: AppJdGeneratorRoute,
   AppJobsRoute: AppJobsRoute,
   AppRecruitmentRoute: AppRecruitmentRoute,
+  AppResumeAnalyzerRoute: AppResumeAnalyzerRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
