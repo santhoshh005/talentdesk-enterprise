@@ -1,6 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Plus, Download, Briefcase, UserPlus, FileText, Target, PenSquare, CalendarClock } from "lucide-react";
-import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip as ReTooltip, XAxis, YAxis } from "recharts";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -65,16 +64,6 @@ function Dashboard() {
     toast.success("Hiring summary exported to CSV");
   }
 
-  const chartData = [
-    { d: "Mon", applied: 12, hired: 2 },
-    { d: "Tue", applied: 19, hired: 3 },
-    { d: "Wed", applied: 24, hired: 5 },
-    { d: "Thu", applied: 18, hired: 4 },
-    { d: "Fri", applied: 32, hired: 8 },
-    { d: "Sat", applied: 15, hired: 3 },
-    { d: "Sun", applied: 9, hired: 1 },
-  ];
-
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
@@ -95,71 +84,54 @@ function Dashboard() {
         }
       />
 
-      {/* Clean 2-Card Top Stats Grid */}
+      {/* Top 2 Interactive Action Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Card className="shadow-xs border-primary/30 bg-primary/5">
+        <Card 
+          onClick={() => setIsCreateJobOpen(true)}
+          className="group shadow-xs border-primary/30 bg-primary/5 hover:bg-primary/10 hover:border-primary/50 transition-all cursor-pointer"
+        >
           <CardContent className="p-5 flex items-center justify-between">
             <div>
               <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Open Jobs</div>
               <div className="mt-1 text-3xl font-extrabold text-foreground">{totalOpenJobs}</div>
-              <div className="mt-1 text-xs text-muted-foreground">Active position requisitions</div>
+              <div className="mt-1.5 flex items-center gap-1 text-xs text-primary font-medium group-hover:underline">
+                <Plus className="size-3.5" /> Click to add position
+              </div>
             </div>
-            <div className="grid size-12 place-items-center rounded-xl bg-primary text-primary-foreground shadow-md">
+            <button 
+              type="button"
+              onClick={(e) => { e.stopPropagation(); setIsCreateJobOpen(true); }}
+              className="grid size-13 place-items-center rounded-xl bg-primary text-primary-foreground shadow-md transition-transform group-hover:scale-105"
+              title="Add New Job Position"
+            >
               <Briefcase className="size-6" />
-            </div>
+            </button>
           </CardContent>
         </Card>
 
-        <Card className="shadow-xs border-success/30 bg-success/5">
+        <Card 
+          onClick={() => setIsCreateCandidateOpen(true)}
+          className="group shadow-xs border-success/30 bg-success/5 hover:bg-success/10 hover:border-success/50 transition-all cursor-pointer"
+        >
           <CardContent className="p-5 flex items-center justify-between">
             <div>
               <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Candidates</div>
               <div className="mt-1 text-3xl font-extrabold text-foreground">{totalCandidatesCount}</div>
-              <div className="mt-1 text-xs text-muted-foreground">Candidates in talent database</div>
+              <div className="mt-1.5 flex items-center gap-1 text-xs text-success font-medium group-hover:underline">
+                <Plus className="size-3.5" /> Click to add candidate
+              </div>
             </div>
-            <div className="grid size-12 place-items-center rounded-xl bg-success text-success-foreground shadow-md">
+            <button 
+              type="button"
+              onClick={(e) => { e.stopPropagation(); setIsCreateCandidateOpen(true); }}
+              className="grid size-13 place-items-center rounded-xl bg-success text-success-foreground shadow-md transition-transform group-hover:scale-105"
+              title="Add New Candidate"
+            >
               <UserPlus className="size-6" />
-            </div>
+            </button>
           </CardContent>
         </Card>
       </div>
-
-      <Card className="shadow-xs">
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <div>
-            <CardTitle className="text-base font-semibold">Hiring activity overview</CardTitle>
-            <p className="text-xs text-muted-foreground">Applications vs hires over time</p>
-          </div>
-          <div className="flex items-center gap-4 text-xs">
-            <span className="flex items-center gap-1.5 font-medium">
-              <span className="size-2 rounded-full bg-primary" /> Applications
-            </span>
-            <span className="flex items-center gap-1.5 font-medium">
-              <span className="size-2 rounded-full bg-success" /> Hires
-            </span>
-          </div>
-        </CardHeader>
-        <CardContent className="pt-2">
-          <div className="h-[240px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="applied" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--color-primary)" stopOpacity={0.18} />
-                    <stop offset="100%" stopColor="var(--color-primary)" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid stroke="var(--color-border)" strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="d" stroke="var(--color-muted-foreground)" fontSize={11} tickLine={false} axisLine={false} />
-                <YAxis stroke="var(--color-muted-foreground)" fontSize={11} tickLine={false} axisLine={false} />
-                <ReTooltip cursor={{ stroke: "var(--color-border)" }} contentStyle={{ background: "var(--color-popover)", border: "1px solid var(--color-border)", borderRadius: 8, fontSize: 12 }} />
-                <Area type="monotone" dataKey="applied" stroke="var(--color-primary)" strokeWidth={2} fill="url(#applied)" />
-                <Area type="monotone" dataKey="hired" stroke="var(--color-success)" strokeWidth={2} fill="transparent" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </CardContent>
-      </Card>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2 shadow-xs">
