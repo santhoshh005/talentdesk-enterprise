@@ -9,16 +9,42 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SignupRouteImport } from './routes/signup'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppTeamRouteImport } from './routes/_app.team'
+import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppResumeAnalyzerRouteImport } from './routes/_app.resume-analyzer'
 import { Route as AppRecruitmentRouteImport } from './routes/_app.recruitment'
 import { Route as AppJobsRouteImport } from './routes/_app.jobs'
 import { Route as AppJdGeneratorRouteImport } from './routes/_app.jd-generator'
+import { Route as AppInterviewGeneratorRouteImport } from './routes/_app.interview-generator'
+import { Route as AppHelpRouteImport } from './routes/_app.help'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppCandidatesRouteImport } from './routes/_app.candidates'
 import { Route as AppCandidateMatchRouteImport } from './routes/_app.candidate-match'
+import { Route as AppBooleanSearchRouteImport } from './routes/_app.boolean-search'
+import { Route as AppAnalyticsRouteImport } from './routes/_app.analytics'
+import { Route as AppAiLabRouteImport } from './routes/_app.ai-lab'
+import { Route as AppSettingsIndexRouteImport } from './routes/_app.settings.index'
 
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppRoute = AppRouteImport.update({
   id: '/_app',
   getParentRoute: () => rootRouteImport,
@@ -27,6 +53,16 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AppTeamRoute = AppTeamRouteImport.update({
+  id: '/team',
+  path: '/team',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSettingsRoute = AppSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AppRoute,
 } as any)
 const AppResumeAnalyzerRoute = AppResumeAnalyzerRouteImport.update({
   id: '/resume-analyzer',
@@ -48,6 +84,16 @@ const AppJdGeneratorRoute = AppJdGeneratorRouteImport.update({
   path: '/jd-generator',
   getParentRoute: () => AppRoute,
 } as any)
+const AppInterviewGeneratorRoute = AppInterviewGeneratorRouteImport.update({
+  id: '/interview-generator',
+  path: '/interview-generator',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppHelpRoute = AppHelpRouteImport.update({
+  id: '/help',
+  path: '/help',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppDashboardRoute = AppDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -63,80 +109,188 @@ const AppCandidateMatchRoute = AppCandidateMatchRouteImport.update({
   path: '/candidate-match',
   getParentRoute: () => AppRoute,
 } as any)
+const AppBooleanSearchRoute = AppBooleanSearchRouteImport.update({
+  id: '/boolean-search',
+  path: '/boolean-search',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAnalyticsRoute = AppAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAiLabRoute = AppAiLabRouteImport.update({
+  id: '/ai-lab',
+  path: '/ai-lab',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSettingsIndexRoute = AppSettingsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppSettingsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/login': typeof LoginRoute
+  '/signup': typeof SignupRoute
+  '/ai-lab': typeof AppAiLabRoute
+  '/analytics': typeof AppAnalyticsRoute
+  '/boolean-search': typeof AppBooleanSearchRoute
   '/candidate-match': typeof AppCandidateMatchRoute
   '/candidates': typeof AppCandidatesRoute
   '/dashboard': typeof AppDashboardRoute
+  '/help': typeof AppHelpRoute
+  '/interview-generator': typeof AppInterviewGeneratorRoute
   '/jd-generator': typeof AppJdGeneratorRoute
   '/jobs': typeof AppJobsRoute
   '/recruitment': typeof AppRecruitmentRoute
   '/resume-analyzer': typeof AppResumeAnalyzerRoute
+  '/settings': typeof AppSettingsRouteWithChildren
+  '/team': typeof AppTeamRoute
+  '/settings/': typeof AppSettingsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/login': typeof LoginRoute
+  '/signup': typeof SignupRoute
+  '/ai-lab': typeof AppAiLabRoute
+  '/analytics': typeof AppAnalyticsRoute
+  '/boolean-search': typeof AppBooleanSearchRoute
   '/candidate-match': typeof AppCandidateMatchRoute
   '/candidates': typeof AppCandidatesRoute
   '/dashboard': typeof AppDashboardRoute
+  '/help': typeof AppHelpRoute
+  '/interview-generator': typeof AppInterviewGeneratorRoute
   '/jd-generator': typeof AppJdGeneratorRoute
   '/jobs': typeof AppJobsRoute
   '/recruitment': typeof AppRecruitmentRoute
   '/resume-analyzer': typeof AppResumeAnalyzerRoute
+  '/team': typeof AppTeamRoute
+  '/settings': typeof AppSettingsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/login': typeof LoginRoute
+  '/signup': typeof SignupRoute
+  '/_app/ai-lab': typeof AppAiLabRoute
+  '/_app/analytics': typeof AppAnalyticsRoute
+  '/_app/boolean-search': typeof AppBooleanSearchRoute
   '/_app/candidate-match': typeof AppCandidateMatchRoute
   '/_app/candidates': typeof AppCandidatesRoute
   '/_app/dashboard': typeof AppDashboardRoute
+  '/_app/help': typeof AppHelpRoute
+  '/_app/interview-generator': typeof AppInterviewGeneratorRoute
   '/_app/jd-generator': typeof AppJdGeneratorRoute
   '/_app/jobs': typeof AppJobsRoute
   '/_app/recruitment': typeof AppRecruitmentRoute
   '/_app/resume-analyzer': typeof AppResumeAnalyzerRoute
+  '/_app/settings': typeof AppSettingsRouteWithChildren
+  '/_app/team': typeof AppTeamRoute
+  '/_app/settings/': typeof AppSettingsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/forgot-password'
+    | '/login'
+    | '/signup'
+    | '/ai-lab'
+    | '/analytics'
+    | '/boolean-search'
     | '/candidate-match'
     | '/candidates'
     | '/dashboard'
+    | '/help'
+    | '/interview-generator'
     | '/jd-generator'
     | '/jobs'
     | '/recruitment'
     | '/resume-analyzer'
+    | '/settings'
+    | '/team'
+    | '/settings/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/forgot-password'
+    | '/login'
+    | '/signup'
+    | '/ai-lab'
+    | '/analytics'
+    | '/boolean-search'
     | '/candidate-match'
     | '/candidates'
     | '/dashboard'
+    | '/help'
+    | '/interview-generator'
     | '/jd-generator'
     | '/jobs'
     | '/recruitment'
     | '/resume-analyzer'
+    | '/team'
+    | '/settings'
   id:
     | '__root__'
     | '/'
     | '/_app'
+    | '/forgot-password'
+    | '/login'
+    | '/signup'
+    | '/_app/ai-lab'
+    | '/_app/analytics'
+    | '/_app/boolean-search'
     | '/_app/candidate-match'
     | '/_app/candidates'
     | '/_app/dashboard'
+    | '/_app/help'
+    | '/_app/interview-generator'
     | '/_app/jd-generator'
     | '/_app/jobs'
     | '/_app/recruitment'
     | '/_app/resume-analyzer'
+    | '/_app/settings'
+    | '/_app/team'
+    | '/_app/settings/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
+  LoginRoute: typeof LoginRoute
+  SignupRoute: typeof SignupRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_app': {
       id: '/_app'
       path: ''
@@ -150,6 +304,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_app/team': {
+      id: '/_app/team'
+      path: '/team'
+      fullPath: '/team'
+      preLoaderRoute: typeof AppTeamRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/settings': {
+      id: '/_app/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AppSettingsRouteImport
+      parentRoute: typeof AppRoute
     }
     '/_app/resume-analyzer': {
       id: '/_app/resume-analyzer'
@@ -179,6 +347,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppJdGeneratorRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/interview-generator': {
+      id: '/_app/interview-generator'
+      path: '/interview-generator'
+      fullPath: '/interview-generator'
+      preLoaderRoute: typeof AppInterviewGeneratorRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/help': {
+      id: '/_app/help'
+      path: '/help'
+      fullPath: '/help'
+      preLoaderRoute: typeof AppHelpRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/dashboard': {
       id: '/_app/dashboard'
       path: '/dashboard'
@@ -200,27 +382,81 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCandidateMatchRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/boolean-search': {
+      id: '/_app/boolean-search'
+      path: '/boolean-search'
+      fullPath: '/boolean-search'
+      preLoaderRoute: typeof AppBooleanSearchRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/analytics': {
+      id: '/_app/analytics'
+      path: '/analytics'
+      fullPath: '/analytics'
+      preLoaderRoute: typeof AppAnalyticsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/ai-lab': {
+      id: '/_app/ai-lab'
+      path: '/ai-lab'
+      fullPath: '/ai-lab'
+      preLoaderRoute: typeof AppAiLabRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/settings/': {
+      id: '/_app/settings/'
+      path: '/'
+      fullPath: '/settings/'
+      preLoaderRoute: typeof AppSettingsIndexRouteImport
+      parentRoute: typeof AppSettingsRoute
+    }
   }
 }
 
+interface AppSettingsRouteChildren {
+  AppSettingsIndexRoute: typeof AppSettingsIndexRoute
+}
+
+const AppSettingsRouteChildren: AppSettingsRouteChildren = {
+  AppSettingsIndexRoute: AppSettingsIndexRoute,
+}
+
+const AppSettingsRouteWithChildren = AppSettingsRoute._addFileChildren(
+  AppSettingsRouteChildren,
+)
+
 interface AppRouteChildren {
+  AppAiLabRoute: typeof AppAiLabRoute
+  AppAnalyticsRoute: typeof AppAnalyticsRoute
+  AppBooleanSearchRoute: typeof AppBooleanSearchRoute
   AppCandidateMatchRoute: typeof AppCandidateMatchRoute
   AppCandidatesRoute: typeof AppCandidatesRoute
   AppDashboardRoute: typeof AppDashboardRoute
+  AppHelpRoute: typeof AppHelpRoute
+  AppInterviewGeneratorRoute: typeof AppInterviewGeneratorRoute
   AppJdGeneratorRoute: typeof AppJdGeneratorRoute
   AppJobsRoute: typeof AppJobsRoute
   AppRecruitmentRoute: typeof AppRecruitmentRoute
   AppResumeAnalyzerRoute: typeof AppResumeAnalyzerRoute
+  AppSettingsRoute: typeof AppSettingsRouteWithChildren
+  AppTeamRoute: typeof AppTeamRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppAiLabRoute: AppAiLabRoute,
+  AppAnalyticsRoute: AppAnalyticsRoute,
+  AppBooleanSearchRoute: AppBooleanSearchRoute,
   AppCandidateMatchRoute: AppCandidateMatchRoute,
   AppCandidatesRoute: AppCandidatesRoute,
   AppDashboardRoute: AppDashboardRoute,
+  AppHelpRoute: AppHelpRoute,
+  AppInterviewGeneratorRoute: AppInterviewGeneratorRoute,
   AppJdGeneratorRoute: AppJdGeneratorRoute,
   AppJobsRoute: AppJobsRoute,
   AppRecruitmentRoute: AppRecruitmentRoute,
   AppResumeAnalyzerRoute: AppResumeAnalyzerRoute,
+  AppSettingsRoute: AppSettingsRouteWithChildren,
+  AppTeamRoute: AppTeamRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
@@ -228,6 +464,9 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
+  ForgotPasswordRoute: ForgotPasswordRoute,
+  LoginRoute: LoginRoute,
+  SignupRoute: SignupRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

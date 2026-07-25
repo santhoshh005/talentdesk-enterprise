@@ -12,7 +12,8 @@ export const Route = createFileRoute("/_app/settings")({
   component: SettingsLayout,
 });
 
-const nav = [
+type NavEntry = { to: string; label: string; exact?: boolean };
+const nav: NavEntry[] = [
   { to: "/settings", label: "Profile", exact: true },
   { to: "/settings/organization", label: "Organization" },
   { to: "/settings/billing", label: "Billing" },
@@ -22,7 +23,7 @@ const nav = [
   { to: "/settings/api-keys", label: "API keys" },
   { to: "/settings/roles", label: "Roles" },
   { to: "/settings/audit-logs", label: "Audit logs" },
-] as const;
+];
 
 function SettingsLayout() {
   const pathname = useRouterState({ select: (r) => r.location.pathname });
@@ -36,7 +37,7 @@ function SettingsLayout() {
             return (
               <Link
                 key={n.to}
-                to={n.to}
+                to={n.to as "/settings"}
                 className={cn(
                   "rounded-md px-3 py-1.5 text-sm transition-colors",
                   active ? "bg-secondary font-medium text-foreground" : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground",
