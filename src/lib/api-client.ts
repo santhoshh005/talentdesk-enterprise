@@ -8,7 +8,7 @@ const getApiBaseUrl = () => {
     return envUrl;
   }
   if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
-    return 'https://talentos-backend.onrender.com/api/v1';
+    return 'https://talentos-backend-lfkp.onrender.com/api/v1';
   }
   return 'http://localhost:4000/api/v1';
 };
