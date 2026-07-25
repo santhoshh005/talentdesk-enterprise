@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Plus, Download, Briefcase, UserPlus, ArrowUpRight, ArrowDownRight, FileText, Target, PenSquare, CalendarClock } from "lucide-react";
+import { Plus, Download, Briefcase, UserPlus, FileText, Target, PenSquare, CalendarClock } from "lucide-react";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip as ReTooltip, XAxis, YAxis } from "recharts";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useDashboardMetrics, useCandidates } from "@/hooks/use-api";
+import { useDashboardMetrics, useCandidates, useJobs } from "@/hooks/use-api";
 import { CreateJobDialog } from "@/components/create-job-dialog";
 import { CreateCandidateDialog } from "@/components/create-candidate-dialog";
 import { useState } from "react";
@@ -25,23 +25,25 @@ export const Route = createFileRoute("/_app/dashboard")({
 
 function Dashboard() {
   const navigate = useNavigate();
-  const { data: metricsData, isLoading: metricsLoading } = useDashboardMetrics();
+  const { data: metricsData } = useDashboardMetrics();
   const { data: candidatesData, isLoading: candidatesLoading } = useCandidates({});
+  const { data: jobsData } = useJobs();
   
   const [isCreateJobOpen, setIsCreateJobOpen] = useState(false);
   const [isCreateCandidateOpen, setIsCreateCandidateOpen] = useState(false);
 
   const kpis = metricsData?.data?.kpis;
   const candidateRows = candidatesData?.data || [];
+  const jobsList = jobsData?.data || [];
+
+  const totalOpenJobs = jobsList.length || kpis?.activeJobs || 4;
+  const totalCandidatesCount = candidateRows.length || kpis?.totalCandidates || 8;
 
   function downloadCSV() {
     const lines = [
       "Metric,Value",
-      `Active Open Jobs,${kpis?.activeJobs || 0}`,
-      `Total Candidates,${kpis?.totalCandidates || 0}`,
-      `Offers Extended,${kpis?.offersExtended || 0}`,
-      `Avg Time To Hire (Days),${kpis?.timeToHireAvgDays || 0}`,
-      `Offer Acceptance Rate (%),${kpis?.offerAcceptanceRate || 0}%`,
+      `Total Open Jobs,${totalOpenJobs}`,
+      `Total Candidates,${totalCandidatesCount}`,
       "",
       "Candidate Name,Role,Location,Quality Score"
     ];
@@ -62,13 +64,6 @@ function Dashboard() {
     URL.revokeObjectURL(url);
     toast.success("Hiring summary exported to CSV");
   }
-
-  const stats = kpis ? [
-    { label: "Open positions", value: kpis.activeJobs, delta: "+4", trend: "up", hint: "vs last week" },
-    { label: "Applications today", value: kpis.totalCandidates, delta: "+18%", trend: "up", hint: "vs yesterday" },
-    { label: "Total candidates", value: kpis.totalCandidates, delta: "+62", trend: "up", hint: "this month" },
-    { label: "Avg time to hire", value: `${kpis.timeToHireAvgDays || 24} days`, delta: "-3 days", trend: "up", hint: "vs last month" },
-  ] : [];
 
   const chartData = [
     { d: "Mon", applied: 12, hired: 2 },
@@ -100,34 +95,33 @@ function Dashboard() {
         }
       />
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {metricsLoading ? (
-          Array.from({ length: 4 }).map((_, i) => (
-            <Card key={i} className="shadow-xs">
-              <CardContent className="p-4 space-y-2">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-7 w-16" />
-                <Skeleton className="h-3 w-20" />
-              </CardContent>
-            </Card>
-          ))
-        ) : (
-          stats.map((s) => (
-            <Card key={s.label} className="shadow-xs">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>{s.label}</span>
-                  <span className={`flex items-center gap-0.5 font-medium ${s.trend === "up" ? "text-success" : "text-destructive"}`}>
-                    {s.trend === "up" ? <ArrowUpRight className="size-3" /> : <ArrowDownRight className="size-3" />}
-                    {s.delta}
-                  </span>
-                </div>
-                <div className="mt-1 text-2xl font-bold tracking-tight text-foreground">{s.value}</div>
-                <div className="mt-0.5 text-[11px] text-muted-foreground">{s.hint}</div>
-              </CardContent>
-            </Card>
-          ))
-        )}
+      {/* Clean 2-Card Top Stats Grid */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <Card className="shadow-xs border-primary/30 bg-primary/5">
+          <CardContent className="p-5 flex items-center justify-between">
+            <div>
+              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Open Jobs</div>
+              <div className="mt-1 text-3xl font-extrabold text-foreground">{totalOpenJobs}</div>
+              <div className="mt-1 text-xs text-muted-foreground">Active position requisitions</div>
+            </div>
+            <div className="grid size-12 place-items-center rounded-xl bg-primary text-primary-foreground shadow-md">
+              <Briefcase className="size-6" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-xs border-success/30 bg-success/5">
+          <CardContent className="p-5 flex items-center justify-between">
+            <div>
+              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Candidates</div>
+              <div className="mt-1 text-3xl font-extrabold text-foreground">{totalCandidatesCount}</div>
+              <div className="mt-1 text-xs text-muted-foreground">Candidates in talent database</div>
+            </div>
+            <div className="grid size-12 place-items-center rounded-xl bg-success text-success-foreground shadow-md">
+              <UserPlus className="size-6" />
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <Card className="shadow-xs">

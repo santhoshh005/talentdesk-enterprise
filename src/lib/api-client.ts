@@ -64,6 +64,7 @@ export const api = {
     formData.append('file', file);
     return apiFetch('/candidates/upload-resume', { method: 'POST', body: formData });
   },
+  deleteCandidate: (id: string) => apiFetch(`/candidates/${id}`, { method: 'DELETE' }),
 
   // Jobs
   getJobs: (params?: Record<string, string>) => {

@@ -1,5 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { Plus, Download, MoreHorizontal, Search, User, Copy } from "lucide-react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { Plus, Download, MoreHorizontal, Search, User, Copy, FileText, Target, Trash2 } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,10 +14,12 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useState } from "react";
 import { useCandidates } from "@/hooks/use-api";
+import { api } from "@/lib/api-client";
 import { useDebounce } from "@/hooks/use-debounce";
 import { CreateCandidateDialog } from "@/components/create-candidate-dialog";
 import { CandidateDetailSheet } from "@/components/candidate-detail-sheet";
@@ -34,6 +36,7 @@ export const Route = createFileRoute("/_app/candidates")({
 });
 
 function CandidatesPage() {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearch = useDebounce(searchTerm, 300);
   const [skillFilter, setSkillFilter] = useState("All skills");
@@ -50,7 +53,7 @@ function CandidatesPage() {
   if (expFilter !== "Any") filters.experience = expFilter;
   if (sortBy) filters.sortBy = sortBy;
 
-  const { data, isLoading } = useCandidates(filters);
+  const { data, isLoading, refetch } = useCandidates(filters);
   const rows = data?.data || [];
 
   function downloadCSV() {
@@ -91,6 +94,17 @@ function CandidatesPage() {
     if (email) {
       navigator.clipboard.writeText(email);
       toast.success(`Copied ${email} to clipboard`);
+    }
+  };
+
+  const handleDeleteCandidate = async (candidateId: string, candidateName: string) => {
+    if (!confirm(`Are you sure you want to delete candidate "${candidateName}"?`)) return;
+    try {
+      await api.deleteCandidate(candidateId);
+      toast.success(`Deleted candidate "${candidateName}"`);
+      refetch();
+    } catch (err) {
+      toast.error("Failed to delete candidate");
     }
   };
 
@@ -249,7 +263,7 @@ function CandidatesPage() {
                               <MoreHorizontal className="size-4" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-48">
+                          <DropdownMenuContent align="end" className="w-52">
                             <DropdownMenuLabel>Candidate Actions</DropdownMenuLabel>
                             <DropdownMenuItem onClick={() => setSelectedCandidateId(c.id)} className="gap-2 cursor-pointer">
                               <User className="size-4 text-muted-foreground" />
@@ -258,6 +272,21 @@ function CandidatesPage() {
                             <DropdownMenuItem onClick={() => copyEmail(c.email)} className="gap-2 cursor-pointer">
                               <Copy className="size-4 text-muted-foreground" />
                               <span>Copy Email</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuLabel className="text-[11px] text-primary font-semibold">AI Shortcuts</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => navigate({ to: "/resume-analyzer", search: { jobTitle: c.role } })} className="gap-2 cursor-pointer">
+                              <FileText className="size-4 text-primary" />
+                              <span>Analyze Resume</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => navigate({ to: "/candidate-match", search: { jobTitle: c.role } })} className="gap-2 cursor-pointer">
+                              <Target className="size-4 text-primary" />
+                              <span>Match Position</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => handleDeleteCandidate(c.id, c.name)} className="gap-2 text-destructive focus:text-destructive cursor-pointer">
+                              <Trash2 className="size-4" />
+                              <span>Delete Candidate</span>
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>

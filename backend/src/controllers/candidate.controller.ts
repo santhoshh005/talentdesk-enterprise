@@ -255,4 +255,17 @@ export class CandidateController {
       next(err);
     }
   }
+
+  static async deleteCandidate(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const id = String(req.params.id);
+      await prisma.candidate.update({
+        where: { id },
+        data: { isDeleted: true },
+      });
+      res.json({ success: true, message: 'Candidate deleted successfully' });
+    } catch (err) {
+      next(err);
+    }
+  }
 }
