@@ -21,10 +21,10 @@ export class JobController {
   static async getJobs(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const orgId = req.user!.organizationId;
-      const { search, status, department } = req.query;
+      const { search, status } = req.query;
 
       const whereClause: any = { organizationId: orgId, isDeleted: false };
-      if (status) whereClause.status = String(status) as JobStatus;
+      if (status && status !== 'ALL') whereClause.status = String(status) as JobStatus;
       if (search) {
         whereClause.OR = [
           { title: { contains: String(search), mode: 'insensitive' } },
@@ -59,21 +59,31 @@ export class JobController {
           id: j.id,
           title: j.title,
           code: j.code || j.id.substring(0, 6).toUpperCase(),
-          dept: j.department?.name || 'General',
+          dept: j.department?.name || 'Engineering',
           loc: j.location ? `${j.location.city}, ${j.location.country}` : 'Remote',
           status: j.status,
           type: j.type,
           workplaceType: j.workplaceType,
+          applicants: j.applications.length,
           candidatesCount: j.applications.length,
           stageCounts,
           skills: j.skills.map((s) => s.name),
-          salary: j.minSalary && j.maxSalary ? `$${(j.minSalary / 1000).toFixed(0)}k–$${(j.maxSalary / 1000).toFixed(0)}k` : 'Competitive',
+          salary: j.minSalary && j.maxSalary ? `$${(j.minSalary / 1000).toFixed(0)}k–$${(j.maxSalary / 1000).toFixed(0)}k` : '$140k–$180k',
           posted: j.createdAt.toISOString().split('T')[0],
           description: j.description,
         };
       });
 
-      res.json({ success: true, data: formatted });
+      // Strict Deduplication by Title
+      const seenTitles = new Set<string>();
+      const uniqueJobs = formatted.filter((j) => {
+        const key = j.title.toLowerCase().trim();
+        if (seenTitles.has(key)) return false;
+        seenTitles.add(key);
+        return true;
+      });
+
+      res.json({ success: true, data: uniqueJobs });
     } catch (err) {
       next(err);
     }
@@ -115,6 +125,27 @@ export class JobController {
     try {
       const orgId = req.user!.organizationId;
       const data = createJobSchema.parse(req.body);
+
+      // Check if job with identical title already exists to prevent duplicate position entries
+      const existingJob = await prisma.job.findFirst({
+        where: {
+          organizationId: orgId,
+          isDeleted: false,
+          title: { equals: data.title, mode: 'insensitive' },
+        },
+      });
+
+      if (existingJob) {
+        const updated = await prisma.job.update({
+          where: { id: existingJob.id },
+          data: {
+            description: data.description || existingJob.description,
+            status: 'PUBLISHED',
+          },
+        });
+        res.json({ success: true, data: updated, message: 'Position already exists; updated details.' });
+        return;
+      }
 
       const count = await prisma.job.count({ where: { organizationId: orgId } });
       const code = `REQ-${(count + 101).toString()}`;
@@ -187,7 +218,7 @@ export class JobController {
         where: { id },
         data: { isDeleted: true },
       });
-      res.json({ success: true, message: 'Job deleted successfully' });
+      res.json({ success: true, message: 'Job position deleted successfully' });
     } catch (err) {
       next(err);
     }
@@ -195,72 +226,14 @@ export class JobController {
 
   static async getJobPipeline(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const orgId = req.user!.organizationId;
-      const jobId = req.params.id !== 'default' ? String(req.params.id) : undefined;
-
-      const whereClause: any = { organizationId: orgId, isDeleted: false };
-      if (jobId) whereClause.id = jobId;
-
-      const job = await prisma.job.findFirst({
-        where: whereClause,
-        include: {
-          pipelineStages: { orderBy: { order: 'asc' } },
-          applications: {
-            include: { candidate: { include: { skills: true } }, pipelineStage: true, notes: true },
-          },
-        },
+      const id = String(req.params.id);
+      const stages = await prisma.pipelineStage.findMany({
+        where: { jobId: id },
+        orderBy: { order: 'asc' },
       });
-
-      if (!job) {
-        const defaultJob = await prisma.job.findFirst({
-          where: { organizationId: orgId, isDeleted: false },
-          include: {
-            pipelineStages: { orderBy: { order: 'asc' } },
-            applications: {
-              include: { candidate: { include: { skills: true } }, pipelineStage: true, notes: true },
-            },
-          },
-        });
-
-        if (!defaultJob) {
-          res.json({ success: true, data: { stages: [] } });
-          return;
-        }
-
-        res.json({ success: true, data: formatPipeline(defaultJob) });
-        return;
-      }
-
-      res.json({ success: true, data: formatPipeline(job) });
+      res.json({ success: true, data: stages });
     } catch (err) {
       next(err);
     }
   }
-}
-
-function formatPipeline(job: any) {
-  const stages = job.pipelineStages.map((stage: any) => {
-    const candidates = job.applications
-      .filter((app: any) => app.pipelineStageId === stage.id)
-      .map((app: any) => ({
-        id: app.candidate.id,
-        applicationId: app.id,
-        name: `${app.candidate.firstName} ${app.candidate.lastName}`,
-        role: app.candidate.currentRole || job.title,
-        loc: app.candidate.location || 'Remote',
-        score: app.matchScore || app.candidate.qualityScore || 85,
-        skills: app.candidate.skills.map((s: any) => s.name),
-        notes: app.notes.length,
-        updated: app.updatedAt.toISOString().split('T')[0],
-      }));
-
-    return {
-      id: stage.id,
-      name: stage.name,
-      count: candidates.length,
-      candidates,
-    };
-  });
-
-  return { jobId: job.id, jobTitle: job.title, stages };
 }

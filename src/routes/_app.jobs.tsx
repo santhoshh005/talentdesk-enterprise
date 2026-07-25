@@ -74,7 +74,15 @@ function JobsPage() {
 
   const { data: jobsData, isLoading, refetch } = useJobs(filters);
   const updateJobMutation = useUpdateJob();
-  const jobs = jobsData?.data || [];
+  
+  const rawJobs = jobsData?.data || [];
+  const seenTitles = new Set<string>();
+  const jobs = rawJobs.filter((j: any) => {
+    const key = (j.title || "").toLowerCase().trim();
+    if (seenTitles.has(key)) return false;
+    seenTitles.add(key);
+    return true;
+  });
 
   const openEditModal = (job: any) => {
     setEditingJob(job);
