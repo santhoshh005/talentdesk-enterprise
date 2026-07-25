@@ -9,13 +9,16 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, Sparkles, Loader2 } from "lucide-react";
+import { Search, Sparkles, Loader2, Target } from "lucide-react";
 import { useCandidates, useJobs } from "@/hooks/use-api";
 import { useDebounce } from "@/hooks/use-debounce";
 import { CandidateDetailSheet } from "@/components/candidate-detail-sheet";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/candidate-match")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    jobTitle: (search.jobTitle as string) || undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Candidate Match — TalentOS" },
@@ -25,10 +28,48 @@ export const Route = createFileRoute("/_app/candidate-match")({
   component: MatchPage,
 });
 
+function calculatePositionMatchScore(candidate: any, targetJobTitle: string): number {
+  const roleNorm = (candidate.role || '').toLowerCase();
+  const jobNorm = (targetJobTitle || '').toLowerCase();
+  const skills = (candidate.skills || []).map((s: string) => String(s).toLowerCase());
+
+  let score = 55;
+
+  // Role Alignment
+  if (roleNorm.includes(jobNorm) || jobNorm.includes(roleNorm)) {
+    score += 30;
+  } else if (
+    (jobNorm.includes('recruiter') && roleNorm.includes('recruiter')) ||
+    (jobNorm.includes('designer') && roleNorm.includes('designer')) ||
+    (jobNorm.includes('frontend') && (roleNorm.includes('frontend') || roleNorm.includes('react'))) ||
+    (jobNorm.includes('backend') && (roleNorm.includes('backend') || roleNorm.includes('node')))
+  ) {
+    score += 25;
+  } else if (
+    (jobNorm.includes('designer') && (roleNorm.includes('recruiter') || roleNorm.includes('engineer'))) ||
+    (jobNorm.includes('recruiter') && (roleNorm.includes('designer') || roleNorm.includes('engineer')))
+  ) {
+    score -= 20; // Major domain mismatch
+  }
+
+  // Skill Alignment
+  if (jobNorm.includes('designer') && skills.some(s => ['figma', 'ui', 'ux', 'design', 'prototyping'].includes(s))) score += 12;
+  if (jobNorm.includes('recruiter') && skills.some(s => ['hiring', 'staffing', 'recruitment', 'sourcing', 'talent acquisition'].includes(s))) score += 12;
+  if (jobNorm.includes('frontend') && skills.some(s => ['react', 'typescript', 'tailwind', 'next.js'].includes(s))) score += 12;
+  if (jobNorm.includes('backend') && skills.some(s => ['node.js', 'postgresql', 'system design', 'docker'].includes(s))) score += 12;
+
+  // Experience level bonus
+  const expYears = candidate.experienceYears || (parseInt(candidate.exp, 10) || 3);
+  if (expYears >= 5) score += 5;
+
+  return Math.min(98, Math.max(38, score));
+}
+
 function MatchPage() {
+  const { jobTitle: searchJobTitle } = Route.useSearch();
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearch = useDebounce(searchQuery, 300);
-  const [targetJob, setTargetJob] = useState("Senior Frontend Engineer");
+  const [targetJob, setTargetJob] = useState(searchJobTitle || "Senior Product Designer");
   const [skillFilter, setSkillFilter] = useState("All skills");
   const [locFilter, setLocFilter] = useState("Any location");
   const [expFilter, setExpFilter] = useState("Any");
@@ -43,15 +84,26 @@ function MatchPage() {
   if (skillFilter !== "All skills") filters.skill = skillFilter;
   if (locFilter !== "Any location") filters.location = locFilter;
   if (expFilter !== "Any") filters.experience = expFilter;
-  if (sortBy) filters.sortBy = sortBy;
 
   const { data: candidatesRes, isLoading: isLoadingCandidates, refetch } = useCandidates(filters);
-  const candidates = candidatesRes?.data || [];
+  const rawCandidates = candidatesRes?.data || [];
+
+  // Dynamically calculate match score against the selected target position
+  const candidates = rawCandidates.map((c: any) => ({
+    ...c,
+    calculatedScore: calculatePositionMatchScore(c, targetJob),
+  }));
+
+  // Sort candidates
+  if (sortBy === "score_desc") candidates.sort((a: any, b: any) => b.calculatedScore - a.calculatedScore);
+  if (sortBy === "score_asc") candidates.sort((a: any, b: any) => a.calculatedScore - b.calculatedScore);
+  if (sortBy === "exp_desc") candidates.sort((a: any, b: any) => (b.experienceYears || 0) - (a.experienceYears || 0));
+  if (sortBy === "name_asc") candidates.sort((a: any, b: any) => (a.name || "").localeCompare(b.name || ""));
 
   const handleReRunMatch = async () => {
     try {
       await refetch();
-      toast.success(`Match scores updated for ${targetJob}`);
+      toast.success(`Match scores re-calculated specifically for "${targetJob}"`);
     } catch (error) {
       toast.error("Failed to update match scores");
     }
@@ -61,43 +113,45 @@ function MatchPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Candidate matching"
-        description={`AI-ranked candidates for target position: ${targetJob}. Click any candidate for evaluation.`}
+        description={`AI match scores calculated specifically against position: ${targetJob}`}
         actions={
           <Button size="sm" className="gap-1.5" onClick={handleReRunMatch} disabled={isLoadingCandidates}>
             {isLoadingCandidates ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />} 
-            Re-run match
+            Re-calculate scores
           </Button>
         }
       />
 
       {/* Target Position & Search Filters Bar */}
       <div className="flex flex-wrap items-center gap-2">
-        {/* Target Job Selector */}
-        <Select value={targetJob} onValueChange={setTargetJob}>
-          <SelectTrigger className="w-[220px] font-semibold"><SelectValue placeholder="Select target job..." /></SelectTrigger>
-          <SelectContent>
-            {jobsList.length > 0 ? (
-              jobsList.map((j: any) => (
-                <SelectItem key={j.id} value={j.title}>{j.title}</SelectItem>
-              ))
-            ) : (
-              <>
-                <SelectItem value="Senior Frontend Engineer">Senior Frontend Engineer</SelectItem>
-                <SelectItem value="Lead Product Designer">Lead Product Designer</SelectItem>
-                <SelectItem value="Staff Backend Engineer">Staff Backend Engineer</SelectItem>
-                <SelectItem value="Technical Product Manager">Technical Product Manager</SelectItem>
-                <SelectItem value="IT Recruiter">IT Recruiter</SelectItem>
-              </>
-            )}
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2 rounded-lg border border-primary/40 bg-primary/5 p-1 px-2.5 text-xs font-semibold text-primary">
+          <Target className="size-4 shrink-0" /> Target Position:
+          <Select value={targetJob} onValueChange={setTargetJob}>
+            <SelectTrigger className="w-[200px] h-8 font-bold bg-background text-foreground border-border"><SelectValue placeholder="Select position..." /></SelectTrigger>
+            <SelectContent>
+              {jobsList.length > 0 ? (
+                jobsList.map((j: any) => (
+                  <SelectItem key={j.id} value={j.title}>{j.title}</SelectItem>
+                ))
+              ) : (
+                <>
+                  <SelectItem value="Senior Product Designer">Senior Product Designer</SelectItem>
+                  <SelectItem value="Senior Frontend Engineer">Senior Frontend Engineer</SelectItem>
+                  <SelectItem value="Staff Backend Engineer">Staff Backend Engineer</SelectItem>
+                  <SelectItem value="Technical Product Manager">Technical Product Manager</SelectItem>
+                  <SelectItem value="IT Recruiter">IT Recruiter</SelectItem>
+                </>
+              )}
+            </SelectContent>
+          </Select>
+        </div>
 
         {/* Search */}
-        <div className="relative flex-1 min-w-[200px] max-w-md">
+        <div className="relative flex-1 min-w-[180px] max-w-md">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input 
-            placeholder="Search candidates by name, skill, role…" 
-            className="pl-8" 
+            placeholder="Search candidates…" 
+            className="pl-8 h-9" 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -105,7 +159,7 @@ function MatchPage() {
 
         {/* Skill Filter */}
         <Select value={skillFilter} onValueChange={setSkillFilter}>
-          <SelectTrigger className="w-[140px]"><SelectValue placeholder="Skill" /></SelectTrigger>
+          <SelectTrigger className="w-[130px] h-9"><SelectValue placeholder="Skill" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="All skills">All skills</SelectItem>
             <SelectItem value="React">React</SelectItem>
@@ -121,7 +175,7 @@ function MatchPage() {
 
         {/* Location Filter */}
         <Select value={locFilter} onValueChange={setLocFilter}>
-          <SelectTrigger className="w-[140px]"><SelectValue placeholder="Location" /></SelectTrigger>
+          <SelectTrigger className="w-[130px] h-9"><SelectValue placeholder="Location" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="Any location">Any location</SelectItem>
             <SelectItem value="Remote">Remote</SelectItem>
@@ -134,7 +188,7 @@ function MatchPage() {
 
         {/* Experience Filter */}
         <Select value={expFilter} onValueChange={setExpFilter}>
-          <SelectTrigger className="w-[130px]"><SelectValue placeholder="Experience" /></SelectTrigger>
+          <SelectTrigger className="w-[120px] h-9"><SelectValue placeholder="Experience" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="Any">Any exp.</SelectItem>
             <SelectItem value="0-2 yrs">0-2 yrs</SelectItem>
@@ -145,7 +199,7 @@ function MatchPage() {
 
         {/* Sort Dropdown */}
         <Select value={sortBy} onValueChange={setSortBy}>
-          <SelectTrigger className="w-[170px]"><SelectValue placeholder="Sort by" /></SelectTrigger>
+          <SelectTrigger className="w-[160px] h-9"><SelectValue placeholder="Sort by" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="score_desc">Match Score (High-Low)</SelectItem>
             <SelectItem value="score_asc">Match Score (Low-High)</SelectItem>
@@ -164,7 +218,7 @@ function MatchPage() {
                 <TableHead>Skills</TableHead>
                 <TableHead>Experience</TableHead>
                 <TableHead>Location</TableHead>
-                <TableHead className="text-right">AI Match score</TableHead>
+                <TableHead className="text-right">Match Score for <span className="font-bold text-foreground">{targetJob}</span></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -186,7 +240,7 @@ function MatchPage() {
                 </TableRow>
               ) : (
                 candidates.map((r: any) => {
-                  const score = r.score || 85;
+                  const score = r.calculatedScore;
                   const candidateSkills = (r.skills && r.skills.length > 0) 
                     ? r.skills 
                     : (r.role?.toLowerCase().includes("recruiter") ? ["Hiring", "Staffing", "Recruitment"] : ["TypeScript", "React", "Node.js"]);
@@ -224,9 +278,14 @@ function MatchPage() {
                       <TableCell className="text-right">
                         <div className="inline-flex items-center gap-2">
                           <div className="h-1.5 w-16 overflow-hidden rounded-full bg-secondary">
-                            <div className="h-full bg-primary" style={{ width: `${score}%` }} />
+                            <div 
+                              className={`h-full ${score >= 80 ? 'bg-primary' : score >= 65 ? 'bg-warning' : 'bg-destructive'}`} 
+                              style={{ width: `${score}%` }} 
+                            />
                           </div>
-                          <span className="text-sm font-bold tabular-nums text-primary">{score}%</span>
+                          <span className={`text-sm font-bold tabular-nums ${score >= 80 ? 'text-primary' : score >= 65 ? 'text-warning' : 'text-destructive'}`}>
+                            {score}%
+                          </span>
                         </div>
                       </TableCell>
                     </TableRow>
