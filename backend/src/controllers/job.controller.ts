@@ -101,7 +101,7 @@ export class JobController {
       });
 
       if (!job) {
-        res.status(404).json({ success: false, error: 'Job requisition not found' });
+        res.status(404).json({ success: false, error: 'Job not found' });
         return;
       }
 
@@ -113,10 +113,11 @@ export class JobController {
 
   static async createJob(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const data = createJobSchema.parse(req.body);
       const orgId = req.user!.organizationId;
+      const data = createJobSchema.parse(req.body);
 
-      const stageList = data.stages && data.stages.length > 0 ? data.stages : ['Applied', 'Screening', 'Interview', 'Offer', 'Hired'];
+      const count = await prisma.job.count({ where: { organizationId: orgId } });
+      const code = `REQ-${(count + 101).toString()}`;
 
       const job = await prisma.job.create({
         data: {
@@ -124,27 +125,30 @@ export class JobController {
           departmentId: data.departmentId,
           locationId: data.locationId,
           title: data.title,
+          code,
           type: data.type,
           workplaceType: data.workplaceType,
           description: data.description,
           requirements: data.requirements,
           minSalary: data.minSalary,
           maxSalary: data.maxSalary,
-          status: JobStatus.PUBLISHED,
-          skills: {
-            create: (data.skills || []).map((s) => ({ name: s, isRequired: true })),
-          },
+          status: 'PUBLISHED',
           pipelineStages: {
-            create: stageList.map((stg, idx) => ({
-              name: stg,
-              order: idx + 1,
-              type: idx === 0 ? ApplicationStageType.APPLIED : idx === stageList.length - 1 ? ApplicationStageType.HIRED : ApplicationStageType.INTERVIEW,
+            create: (data.stages || ['Sourced', 'Screening', 'Interview', 'Offer', 'Hired']).map((name, index) => ({
+              organizationId: orgId,
+              name,
+              order: index + 1,
+              type: (name.toUpperCase().includes('SCREEN')
+                ? 'SCREENING'
+                : name.toUpperCase().includes('INTERVIEW')
+                ? 'INTERVIEW'
+                : name.toUpperCase().includes('OFFER')
+                ? 'OFFER'
+                : name.toUpperCase().includes('HIRE')
+                ? 'HIRED'
+                : 'SOURCED') as ApplicationStageType,
             })),
           },
-        },
-        include: {
-          skills: true,
-          pipelineStages: true,
         },
       });
 
@@ -154,28 +158,62 @@ export class JobController {
     }
   }
 
-  static async getJobPipeline(req: Request, res: Response, next: NextFunction): Promise<void> {
+  static async updateJob(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const id = String(req.params.id);
+      const { title, status, description, type, workplaceType } = req.body;
 
-      const job = await prisma.job.findUnique({
+      const updated = await prisma.job.update({
         where: { id },
+        data: {
+          ...(title && { title }),
+          ...(status && { status: status as JobStatus }),
+          ...(description && { description }),
+          ...(type && { type }),
+          ...(workplaceType && { workplaceType }),
+        },
+      });
+
+      res.json({ success: true, data: updated });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async deleteJob(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const id = String(req.params.id);
+      await prisma.job.update({
+        where: { id },
+        data: { isDeleted: true },
+      });
+      res.json({ success: true, message: 'Job deleted successfully' });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async getJobPipeline(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const orgId = req.user!.organizationId;
+      const jobId = req.params.id !== 'default' ? String(req.params.id) : undefined;
+
+      const whereClause: any = { organizationId: orgId, isDeleted: false };
+      if (jobId) whereClause.id = jobId;
+
+      const job = await prisma.job.findFirst({
+        where: whereClause,
         include: {
           pipelineStages: { orderBy: { order: 'asc' } },
           applications: {
-            include: {
-              candidate: { include: { skills: true } },
-              pipelineStage: true,
-              notes: true,
-            },
+            include: { candidate: { include: { skills: true } }, pipelineStage: true, notes: true },
           },
         },
       });
 
       if (!job) {
-        // Fallback to first available active job or default
         const defaultJob = await prisma.job.findFirst({
-          where: { organizationId: req.user!.organizationId },
+          where: { organizationId: orgId, isDeleted: false },
           include: {
             pipelineStages: { orderBy: { order: 'asc' } },
             applications: {

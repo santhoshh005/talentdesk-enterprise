@@ -73,6 +73,7 @@ export const api = {
   getJobById: (id: string) => apiFetch(`/jobs/${id}`),
   createJob: (data: any) => apiFetch('/jobs', { method: 'POST', body: JSON.stringify(data) }),
   updateJob: (id: string, data: any) => apiFetch(`/jobs/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  deleteJob: (id: string) => apiFetch(`/jobs/${id}`, { method: 'DELETE' }),
 
   // Applications
   getApplications: (params?: Record<string, string>) => {

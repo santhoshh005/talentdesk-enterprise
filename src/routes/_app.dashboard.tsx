@@ -269,7 +269,7 @@ function Dashboard() {
                 { icon: FileText, label: "Analyze CV", action: () => navigate({ to: "/resume-analyzer" }) },
                 { icon: PenSquare, label: "Write JD", action: () => navigate({ to: "/jd-generator" }) },
                 { icon: Target, label: "Match", action: () => navigate({ to: "/candidate-match" }) },
-                { icon: CalendarClock, label: "Schedule", action: () => navigate({ to: "/recruitment" }) },
+                { icon: CalendarClock, label: "Schedule", action: () => navigate({ to: "/candidates" }) },
               ].map((a) => (
                 <button 
                   key={a.label} 

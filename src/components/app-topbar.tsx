@@ -1,4 +1,4 @@
-import { Bell, Search, HelpCircle, Command as CommandIcon } from "lucide-react";
+import { Search, Command as CommandIcon, Sun, Moon, User } from "lucide-react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
@@ -11,13 +11,39 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
 import { useNavigate } from "@tanstack/react-router";
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
 
 export function AppTopbar({ onOpenPalette }: { onOpenPalette: () => void }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+
+  const [isDark, setIsDark] = useState(() => {
+    if (typeof window !== "undefined") {
+      return document.documentElement.classList.contains("dark") || 
+        localStorage.getItem("theme") === "dark";
+    }
+    return false;
+  });
+
+  const toggleTheme = () => {
+    const nextDark = !isDark;
+    setIsDark(nextDark);
+    const root = document.documentElement;
+    if (nextDark) {
+      root.classList.add("dark");
+      root.classList.remove("light");
+      localStorage.setItem("theme", "dark");
+      toast.success("Switched to Dark mode");
+    } else {
+      root.classList.add("light");
+      root.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+      toast.success("Switched to Light mode");
+    }
+  };
 
   const handleLogout = () => {
     logout();
@@ -42,42 +68,24 @@ export function AppTopbar({ onOpenPalette }: { onOpenPalette: () => void }) {
           <CommandIcon className="size-3" />K
         </kbd>
       </button>
-      <div className="ml-auto flex items-center gap-1.5">
+      <div className="ml-auto flex items-center gap-2">
         <Button variant="ghost" size="icon" className="size-9 md:hidden" onClick={onOpenPalette} aria-label="Search">
           <Search className="size-4" />
         </Button>
-        <Button variant="ghost" size="icon" className="size-9" aria-label="Help" onClick={() => navigate({ to: "/help" })}>
-          <HelpCircle className="size-4" />
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-9 rounded-md transition-colors"
+          onClick={toggleTheme}
+          aria-label="Toggle theme"
+          title={isDark ? "Switch to Light mode" : "Switch to Dark mode"}
+        >
+          {isDark ? <Sun className="size-4 text-warning" /> : <Moon className="size-4 text-muted-foreground" />}
         </Button>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="relative size-9" aria-label="Notifications">
-              <Bell className="size-4" />
-              <span className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-primary" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-80">
-            <DropdownMenuLabel className="flex items-center justify-between">
-              <span>Notifications</span>
-              <Badge variant="secondary" className="rounded-full text-[10px]">3 new</Badge>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            {[
-              ["Priya Menon accepted your interview invite", "2m ago"],
-              ["New application: Senior Backend Engineer", "18m ago"],
-              ["Weekly hiring report is ready", "1h ago"],
-            ].map(([t, when]) => (
-              <DropdownMenuItem key={t} className="flex-col items-start gap-0.5 py-2.5">
-                <span className="text-sm font-medium text-foreground">{t}</span>
-                <span className="text-xs text-muted-foreground">{when}</span>
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
         <Separator orientation="vertical" className="mx-1 h-5" />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-2 rounded-md p-1 pl-1.5 hover:bg-secondary transition-colors" aria-label="Account menu">
+            <button className="flex items-center gap-2 rounded-md p-1 pl-1.5 hover:bg-secondary transition-colors cursor-pointer" aria-label="Account menu">
               <Avatar className="size-7">
                 <AvatarFallback className="bg-primary text-primary-foreground text-[11px] font-medium">{userInitials}</AvatarFallback>
               </Avatar>
@@ -89,9 +97,10 @@ export function AppTopbar({ onOpenPalette }: { onOpenPalette: () => void }) {
               <span className="text-xs font-normal text-muted-foreground">{email}</span>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => navigate({ to: "/settings" })}>Profile</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => navigate({ to: "/settings" })}>Settings</DropdownMenuItem>
-            <DropdownMenuItem>Keyboard shortcuts</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate({ to: "/profile" })} className="gap-2">
+              <User className="size-4" />
+              <span>Profile</span>
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout}>Sign out</DropdownMenuItem>
           </DropdownMenuContent>

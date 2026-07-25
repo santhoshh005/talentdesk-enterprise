@@ -8,12 +8,7 @@ import {
   Target,
   PenSquare,
   MessageSquareText,
-  Search,
-  FlaskConical,
-  BarChart3,
-  UsersRound,
-  Settings,
-  GitBranch,
+  User,
   Plus,
 } from "lucide-react";
 import {
@@ -31,18 +26,13 @@ type Item = { label: string; to: string; icon: React.ComponentType<{ className?:
 
 const navItems: Item[] = [
   { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard },
-  { label: "Recruitment", to: "/recruitment", icon: GitBranch },
   { label: "Jobs", to: "/jobs", icon: Briefcase },
   { label: "Candidates", to: "/candidates", icon: Users },
   { label: "Resume Analyzer", to: "/resume-analyzer", icon: FileText },
   { label: "Candidate Match", to: "/candidate-match", icon: Target },
   { label: "JD Generator", to: "/jd-generator", icon: PenSquare },
   { label: "Interview Generator", to: "/interview-generator", icon: MessageSquareText },
-  { label: "Boolean Search", to: "/boolean-search", icon: Search },
-  { label: "AI Lab", to: "/ai-lab", icon: FlaskConical },
-  { label: "Analytics", to: "/analytics", icon: BarChart3 },
-  { label: "Team", to: "/team", icon: UsersRound },
-  { label: "Settings", to: "/settings", icon: Settings },
+  { label: "Profile", to: "/profile", icon: User },
 ];
 
 export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {

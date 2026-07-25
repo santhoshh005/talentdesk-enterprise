@@ -14,29 +14,14 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as SignupRouteImport } from './routes/signup'
-import { Route as AppAiLabRouteImport } from './routes/_app.ai-lab'
-import { Route as AppAnalyticsRouteImport } from './routes/_app.analytics'
-import { Route as AppBooleanSearchRouteImport } from './routes/_app.boolean-search'
 import { Route as AppCandidateMatchRouteImport } from './routes/_app.candidate-match'
 import { Route as AppCandidatesRouteImport } from './routes/_app.candidates'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
-import { Route as AppHelpRouteImport } from './routes/_app.help'
 import { Route as AppInterviewGeneratorRouteImport } from './routes/_app.interview-generator'
 import { Route as AppJdGeneratorRouteImport } from './routes/_app.jd-generator'
 import { Route as AppJobsRouteImport } from './routes/_app.jobs'
-import { Route as AppRecruitmentRouteImport } from './routes/_app.recruitment'
+import { Route as AppProfileRouteImport } from './routes/_app.profile'
 import { Route as AppResumeAnalyzerRouteImport } from './routes/_app.resume-analyzer'
-import { Route as AppSettingsRouteImport } from './routes/_app.settings'
-import { Route as AppTeamRouteImport } from './routes/_app.team'
-import { Route as AppSettingsIndexRouteImport } from './routes/_app.settings.index'
-import { Route as AppSettingsApiKeysRouteImport } from './routes/_app.settings.api-keys'
-import { Route as AppSettingsAuditRouteImport } from './routes/_app.settings.audit'
-import { Route as AppSettingsBillingRouteImport } from './routes/_app.settings.billing'
-import { Route as AppSettingsIntegrationsRouteImport } from './routes/_app.settings.integrations'
-import { Route as AppSettingsNotificationsRouteImport } from './routes/_app.settings.notifications'
-import { Route as AppSettingsOrganizationRouteImport } from './routes/_app.settings.organization'
-import { Route as AppSettingsRolesRouteImport } from './routes/_app.settings.roles'
-import { Route as AppSettingsSecurityRouteImport } from './routes/_app.settings.security'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -62,21 +47,6 @@ const SignupRoute = SignupRouteImport.update({
   path: '/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AppAiLabRoute = AppAiLabRouteImport.update({
-  id: '/ai-lab',
-  path: '/ai-lab',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppAnalyticsRoute = AppAnalyticsRouteImport.update({
-  id: '/analytics',
-  path: '/analytics',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppBooleanSearchRoute = AppBooleanSearchRouteImport.update({
-  id: '/boolean-search',
-  path: '/boolean-search',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppCandidateMatchRoute = AppCandidateMatchRouteImport.update({
   id: '/candidate-match',
   path: '/candidate-match',
@@ -90,11 +60,6 @@ const AppCandidatesRoute = AppCandidatesRouteImport.update({
 const AppDashboardRoute = AppDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppHelpRoute = AppHelpRouteImport.update({
-  id: '/help',
-  path: '/help',
   getParentRoute: () => AppRoute,
 } as any)
 const AppInterviewGeneratorRoute = AppInterviewGeneratorRouteImport.update({
@@ -112,9 +77,9 @@ const AppJobsRoute = AppJobsRouteImport.update({
   path: '/jobs',
   getParentRoute: () => AppRoute,
 } as any)
-const AppRecruitmentRoute = AppRecruitmentRouteImport.update({
-  id: '/recruitment',
-  path: '/recruitment',
+const AppProfileRoute = AppProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
   getParentRoute: () => AppRoute,
 } as any)
 const AppResumeAnalyzerRoute = AppResumeAnalyzerRouteImport.update({
@@ -122,119 +87,34 @@ const AppResumeAnalyzerRoute = AppResumeAnalyzerRouteImport.update({
   path: '/resume-analyzer',
   getParentRoute: () => AppRoute,
 } as any)
-const AppSettingsRoute = AppSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppTeamRoute = AppTeamRouteImport.update({
-  id: '/team',
-  path: '/team',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppSettingsIndexRoute = AppSettingsIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AppSettingsRoute,
-} as any)
-const AppSettingsApiKeysRoute = AppSettingsApiKeysRouteImport.update({
-  id: '/api-keys',
-  path: '/api-keys',
-  getParentRoute: () => AppSettingsRoute,
-} as any)
-const AppSettingsAuditRoute = AppSettingsAuditRouteImport.update({
-  id: '/audit',
-  path: '/audit',
-  getParentRoute: () => AppSettingsRoute,
-} as any)
-const AppSettingsBillingRoute = AppSettingsBillingRouteImport.update({
-  id: '/billing',
-  path: '/billing',
-  getParentRoute: () => AppSettingsRoute,
-} as any)
-const AppSettingsIntegrationsRoute = AppSettingsIntegrationsRouteImport.update({
-  id: '/integrations',
-  path: '/integrations',
-  getParentRoute: () => AppSettingsRoute,
-} as any)
-const AppSettingsNotificationsRoute =
-  AppSettingsNotificationsRouteImport.update({
-    id: '/notifications',
-    path: '/notifications',
-    getParentRoute: () => AppSettingsRoute,
-  } as any)
-const AppSettingsOrganizationRoute = AppSettingsOrganizationRouteImport.update({
-  id: '/organization',
-  path: '/organization',
-  getParentRoute: () => AppSettingsRoute,
-} as any)
-const AppSettingsRolesRoute = AppSettingsRolesRouteImport.update({
-  id: '/roles',
-  path: '/roles',
-  getParentRoute: () => AppSettingsRoute,
-} as any)
-const AppSettingsSecurityRoute = AppSettingsSecurityRouteImport.update({
-  id: '/security',
-  path: '/security',
-  getParentRoute: () => AppSettingsRoute,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
-  '/ai-lab': typeof AppAiLabRoute
-  '/analytics': typeof AppAnalyticsRoute
-  '/boolean-search': typeof AppBooleanSearchRoute
   '/candidate-match': typeof AppCandidateMatchRoute
   '/candidates': typeof AppCandidatesRoute
   '/dashboard': typeof AppDashboardRoute
-  '/help': typeof AppHelpRoute
   '/interview-generator': typeof AppInterviewGeneratorRoute
   '/jd-generator': typeof AppJdGeneratorRoute
   '/jobs': typeof AppJobsRoute
-  '/recruitment': typeof AppRecruitmentRoute
+  '/profile': typeof AppProfileRoute
   '/resume-analyzer': typeof AppResumeAnalyzerRoute
-  '/settings': typeof AppSettingsRouteWithChildren
-  '/team': typeof AppTeamRoute
-  '/settings/api-keys': typeof AppSettingsApiKeysRoute
-  '/settings/audit': typeof AppSettingsAuditRoute
-  '/settings/billing': typeof AppSettingsBillingRoute
-  '/settings/integrations': typeof AppSettingsIntegrationsRoute
-  '/settings/notifications': typeof AppSettingsNotificationsRoute
-  '/settings/organization': typeof AppSettingsOrganizationRoute
-  '/settings/roles': typeof AppSettingsRolesRoute
-  '/settings/security': typeof AppSettingsSecurityRoute
-  '/settings/': typeof AppSettingsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
-  '/ai-lab': typeof AppAiLabRoute
-  '/analytics': typeof AppAnalyticsRoute
-  '/boolean-search': typeof AppBooleanSearchRoute
   '/candidate-match': typeof AppCandidateMatchRoute
   '/candidates': typeof AppCandidatesRoute
   '/dashboard': typeof AppDashboardRoute
-  '/help': typeof AppHelpRoute
   '/interview-generator': typeof AppInterviewGeneratorRoute
   '/jd-generator': typeof AppJdGeneratorRoute
   '/jobs': typeof AppJobsRoute
-  '/recruitment': typeof AppRecruitmentRoute
+  '/profile': typeof AppProfileRoute
   '/resume-analyzer': typeof AppResumeAnalyzerRoute
-  '/team': typeof AppTeamRoute
-  '/settings/api-keys': typeof AppSettingsApiKeysRoute
-  '/settings/audit': typeof AppSettingsAuditRoute
-  '/settings/billing': typeof AppSettingsBillingRoute
-  '/settings/integrations': typeof AppSettingsIntegrationsRoute
-  '/settings/notifications': typeof AppSettingsNotificationsRoute
-  '/settings/organization': typeof AppSettingsOrganizationRoute
-  '/settings/roles': typeof AppSettingsRolesRoute
-  '/settings/security': typeof AppSettingsSecurityRoute
-  '/settings': typeof AppSettingsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -243,29 +123,14 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
-  '/_app/ai-lab': typeof AppAiLabRoute
-  '/_app/analytics': typeof AppAnalyticsRoute
-  '/_app/boolean-search': typeof AppBooleanSearchRoute
   '/_app/candidate-match': typeof AppCandidateMatchRoute
   '/_app/candidates': typeof AppCandidatesRoute
   '/_app/dashboard': typeof AppDashboardRoute
-  '/_app/help': typeof AppHelpRoute
   '/_app/interview-generator': typeof AppInterviewGeneratorRoute
   '/_app/jd-generator': typeof AppJdGeneratorRoute
   '/_app/jobs': typeof AppJobsRoute
-  '/_app/recruitment': typeof AppRecruitmentRoute
+  '/_app/profile': typeof AppProfileRoute
   '/_app/resume-analyzer': typeof AppResumeAnalyzerRoute
-  '/_app/settings': typeof AppSettingsRouteWithChildren
-  '/_app/team': typeof AppTeamRoute
-  '/_app/settings/api-keys': typeof AppSettingsApiKeysRoute
-  '/_app/settings/audit': typeof AppSettingsAuditRoute
-  '/_app/settings/billing': typeof AppSettingsBillingRoute
-  '/_app/settings/integrations': typeof AppSettingsIntegrationsRoute
-  '/_app/settings/notifications': typeof AppSettingsNotificationsRoute
-  '/_app/settings/organization': typeof AppSettingsOrganizationRoute
-  '/_app/settings/roles': typeof AppSettingsRolesRoute
-  '/_app/settings/security': typeof AppSettingsSecurityRoute
-  '/_app/settings/': typeof AppSettingsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -274,57 +139,28 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/signup'
-    | '/ai-lab'
-    | '/analytics'
-    | '/boolean-search'
     | '/candidate-match'
     | '/candidates'
     | '/dashboard'
-    | '/help'
     | '/interview-generator'
     | '/jd-generator'
     | '/jobs'
-    | '/recruitment'
+    | '/profile'
     | '/resume-analyzer'
-    | '/settings'
-    | '/team'
-    | '/settings/api-keys'
-    | '/settings/audit'
-    | '/settings/billing'
-    | '/settings/integrations'
-    | '/settings/notifications'
-    | '/settings/organization'
-    | '/settings/roles'
-    | '/settings/security'
-    | '/settings/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/forgot-password'
     | '/login'
     | '/signup'
-    | '/ai-lab'
-    | '/analytics'
-    | '/boolean-search'
     | '/candidate-match'
     | '/candidates'
     | '/dashboard'
-    | '/help'
     | '/interview-generator'
     | '/jd-generator'
     | '/jobs'
-    | '/recruitment'
+    | '/profile'
     | '/resume-analyzer'
-    | '/team'
-    | '/settings/api-keys'
-    | '/settings/audit'
-    | '/settings/billing'
-    | '/settings/integrations'
-    | '/settings/notifications'
-    | '/settings/organization'
-    | '/settings/roles'
-    | '/settings/security'
-    | '/settings'
   id:
     | '__root__'
     | '/'
@@ -332,29 +168,14 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/signup'
-    | '/_app/ai-lab'
-    | '/_app/analytics'
-    | '/_app/boolean-search'
     | '/_app/candidate-match'
     | '/_app/candidates'
     | '/_app/dashboard'
-    | '/_app/help'
     | '/_app/interview-generator'
     | '/_app/jd-generator'
     | '/_app/jobs'
-    | '/_app/recruitment'
+    | '/_app/profile'
     | '/_app/resume-analyzer'
-    | '/_app/settings'
-    | '/_app/team'
-    | '/_app/settings/api-keys'
-    | '/_app/settings/audit'
-    | '/_app/settings/billing'
-    | '/_app/settings/integrations'
-    | '/_app/settings/notifications'
-    | '/_app/settings/organization'
-    | '/_app/settings/roles'
-    | '/_app/settings/security'
-    | '/_app/settings/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -402,27 +223,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignupRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_app/ai-lab': {
-      id: '/_app/ai-lab'
-      path: '/ai-lab'
-      fullPath: '/ai-lab'
-      preLoaderRoute: typeof AppAiLabRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/analytics': {
-      id: '/_app/analytics'
-      path: '/analytics'
-      fullPath: '/analytics'
-      preLoaderRoute: typeof AppAnalyticsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/boolean-search': {
-      id: '/_app/boolean-search'
-      path: '/boolean-search'
-      fullPath: '/boolean-search'
-      preLoaderRoute: typeof AppBooleanSearchRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/candidate-match': {
       id: '/_app/candidate-match'
       path: '/candidate-match'
@@ -442,13 +242,6 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof AppDashboardRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/help': {
-      id: '/_app/help'
-      path: '/help'
-      fullPath: '/help'
-      preLoaderRoute: typeof AppHelpRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/interview-generator': {
@@ -472,11 +265,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppJobsRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/recruitment': {
-      id: '/_app/recruitment'
-      path: '/recruitment'
-      fullPath: '/recruitment'
-      preLoaderRoute: typeof AppRecruitmentRouteImport
+    '/_app/profile': {
+      id: '/_app/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof AppProfileRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/resume-analyzer': {
@@ -486,146 +279,29 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppResumeAnalyzerRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/settings': {
-      id: '/_app/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof AppSettingsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/team': {
-      id: '/_app/team'
-      path: '/team'
-      fullPath: '/team'
-      preLoaderRoute: typeof AppTeamRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/settings/': {
-      id: '/_app/settings/'
-      path: '/'
-      fullPath: '/settings/'
-      preLoaderRoute: typeof AppSettingsIndexRouteImport
-      parentRoute: typeof AppSettingsRoute
-    }
-    '/_app/settings/api-keys': {
-      id: '/_app/settings/api-keys'
-      path: '/api-keys'
-      fullPath: '/settings/api-keys'
-      preLoaderRoute: typeof AppSettingsApiKeysRouteImport
-      parentRoute: typeof AppSettingsRoute
-    }
-    '/_app/settings/audit': {
-      id: '/_app/settings/audit'
-      path: '/audit'
-      fullPath: '/settings/audit'
-      preLoaderRoute: typeof AppSettingsAuditRouteImport
-      parentRoute: typeof AppSettingsRoute
-    }
-    '/_app/settings/billing': {
-      id: '/_app/settings/billing'
-      path: '/billing'
-      fullPath: '/settings/billing'
-      preLoaderRoute: typeof AppSettingsBillingRouteImport
-      parentRoute: typeof AppSettingsRoute
-    }
-    '/_app/settings/integrations': {
-      id: '/_app/settings/integrations'
-      path: '/integrations'
-      fullPath: '/settings/integrations'
-      preLoaderRoute: typeof AppSettingsIntegrationsRouteImport
-      parentRoute: typeof AppSettingsRoute
-    }
-    '/_app/settings/notifications': {
-      id: '/_app/settings/notifications'
-      path: '/notifications'
-      fullPath: '/settings/notifications'
-      preLoaderRoute: typeof AppSettingsNotificationsRouteImport
-      parentRoute: typeof AppSettingsRoute
-    }
-    '/_app/settings/organization': {
-      id: '/_app/settings/organization'
-      path: '/organization'
-      fullPath: '/settings/organization'
-      preLoaderRoute: typeof AppSettingsOrganizationRouteImport
-      parentRoute: typeof AppSettingsRoute
-    }
-    '/_app/settings/roles': {
-      id: '/_app/settings/roles'
-      path: '/roles'
-      fullPath: '/settings/roles'
-      preLoaderRoute: typeof AppSettingsRolesRouteImport
-      parentRoute: typeof AppSettingsRoute
-    }
-    '/_app/settings/security': {
-      id: '/_app/settings/security'
-      path: '/security'
-      fullPath: '/settings/security'
-      preLoaderRoute: typeof AppSettingsSecurityRouteImport
-      parentRoute: typeof AppSettingsRoute
-    }
   }
 }
 
-interface AppSettingsRouteChildren {
-  AppSettingsApiKeysRoute: typeof AppSettingsApiKeysRoute
-  AppSettingsAuditRoute: typeof AppSettingsAuditRoute
-  AppSettingsBillingRoute: typeof AppSettingsBillingRoute
-  AppSettingsIntegrationsRoute: typeof AppSettingsIntegrationsRoute
-  AppSettingsNotificationsRoute: typeof AppSettingsNotificationsRoute
-  AppSettingsOrganizationRoute: typeof AppSettingsOrganizationRoute
-  AppSettingsRolesRoute: typeof AppSettingsRolesRoute
-  AppSettingsSecurityRoute: typeof AppSettingsSecurityRoute
-  AppSettingsIndexRoute: typeof AppSettingsIndexRoute
-}
-
-const AppSettingsRouteChildren: AppSettingsRouteChildren = {
-  AppSettingsApiKeysRoute: AppSettingsApiKeysRoute,
-  AppSettingsAuditRoute: AppSettingsAuditRoute,
-  AppSettingsBillingRoute: AppSettingsBillingRoute,
-  AppSettingsIntegrationsRoute: AppSettingsIntegrationsRoute,
-  AppSettingsNotificationsRoute: AppSettingsNotificationsRoute,
-  AppSettingsOrganizationRoute: AppSettingsOrganizationRoute,
-  AppSettingsRolesRoute: AppSettingsRolesRoute,
-  AppSettingsSecurityRoute: AppSettingsSecurityRoute,
-  AppSettingsIndexRoute: AppSettingsIndexRoute,
-}
-
-const AppSettingsRouteWithChildren = AppSettingsRoute._addFileChildren(
-  AppSettingsRouteChildren,
-)
-
 interface AppRouteChildren {
-  AppAiLabRoute: typeof AppAiLabRoute
-  AppAnalyticsRoute: typeof AppAnalyticsRoute
-  AppBooleanSearchRoute: typeof AppBooleanSearchRoute
   AppCandidateMatchRoute: typeof AppCandidateMatchRoute
   AppCandidatesRoute: typeof AppCandidatesRoute
   AppDashboardRoute: typeof AppDashboardRoute
-  AppHelpRoute: typeof AppHelpRoute
   AppInterviewGeneratorRoute: typeof AppInterviewGeneratorRoute
   AppJdGeneratorRoute: typeof AppJdGeneratorRoute
   AppJobsRoute: typeof AppJobsRoute
-  AppRecruitmentRoute: typeof AppRecruitmentRoute
+  AppProfileRoute: typeof AppProfileRoute
   AppResumeAnalyzerRoute: typeof AppResumeAnalyzerRoute
-  AppSettingsRoute: typeof AppSettingsRouteWithChildren
-  AppTeamRoute: typeof AppTeamRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
-  AppAiLabRoute: AppAiLabRoute,
-  AppAnalyticsRoute: AppAnalyticsRoute,
-  AppBooleanSearchRoute: AppBooleanSearchRoute,
   AppCandidateMatchRoute: AppCandidateMatchRoute,
   AppCandidatesRoute: AppCandidatesRoute,
   AppDashboardRoute: AppDashboardRoute,
-  AppHelpRoute: AppHelpRoute,
   AppInterviewGeneratorRoute: AppInterviewGeneratorRoute,
   AppJdGeneratorRoute: AppJdGeneratorRoute,
   AppJobsRoute: AppJobsRoute,
-  AppRecruitmentRoute: AppRecruitmentRoute,
+  AppProfileRoute: AppProfileRoute,
   AppResumeAnalyzerRoute: AppResumeAnalyzerRoute,
-  AppSettingsRoute: AppSettingsRouteWithChildren,
-  AppTeamRoute: AppTeamRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)

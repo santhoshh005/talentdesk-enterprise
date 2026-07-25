@@ -7,13 +7,7 @@ import {
   Target,
   PenSquare,
   MessageSquareText,
-  Search,
-  FlaskConical,
-  BarChart3,
-  UsersRound,
-  Settings,
-  LifeBuoy,
-  GitBranch,
+  User,
   ChevronDown,
   Sparkles,
 } from "lucide-react";
@@ -44,7 +38,6 @@ type NavItem = { title: string; url: string; icon: React.ComponentType<{ classNa
 
 const primary: NavItem[] = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-  { title: "Recruitment", url: "/recruitment", icon: GitBranch },
   { title: "Jobs", url: "/jobs", icon: Briefcase },
   { title: "Candidates", url: "/candidates", icon: Users },
 ];
@@ -54,13 +47,6 @@ const aiTools: NavItem[] = [
   { title: "Candidate Match", url: "/candidate-match", icon: Target },
   { title: "JD Generator", url: "/jd-generator", icon: PenSquare },
   { title: "Interview Generator", url: "/interview-generator", icon: MessageSquareText },
-  { title: "Boolean Search", url: "/boolean-search", icon: Search },
-  { title: "AI Lab", url: "/ai-lab", icon: FlaskConical },
-];
-
-const workspace: NavItem[] = [
-  { title: "Analytics", url: "/analytics", icon: BarChart3 },
-  { title: "Team", url: "/team", icon: UsersRound },
 ];
 
 function NavGroup({ label, items, currentPath }: { label: string; items: NavItem[]; currentPath: string }) {
@@ -98,7 +84,7 @@ export function AppSidebar() {
   const currentPath = useRouterState({ select: (r) => r.location.pathname });
   const { user } = useAuth();
   
-  const orgName = user?.organization?.name || "Acme Corporation";
+  const orgName = user?.organization?.name || "TalentOS Enterprise";
 
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
@@ -128,24 +114,15 @@ export function AppSidebar() {
       <SidebarContent className="gap-0.5 px-1.5">
         <NavGroup label="Overview" items={primary} currentPath={currentPath} />
         <NavGroup label="AI Tools" items={aiTools} currentPath={currentPath} />
-        <NavGroup label="Workspace" items={workspace} currentPath={currentPath} />
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border p-1.5">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={currentPath.startsWith("/settings")} className="h-9 rounded-md text-[13.5px] font-medium">
-              <Link to="/settings">
-                <Settings className="size-4" />
-                <span>Settings</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={currentPath.startsWith("/help")} className="h-9 rounded-md text-[13.5px] font-medium">
-              <Link to="/help">
-                <LifeBuoy className="size-4" />
-                <span>Help & docs</span>
+            <SidebarMenuButton asChild isActive={currentPath.startsWith("/profile")} className="h-9 rounded-md text-[13.5px] font-medium">
+              <Link to="/profile">
+                <User className="size-4" />
+                <span>Profile</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
