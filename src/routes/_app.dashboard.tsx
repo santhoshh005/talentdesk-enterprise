@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Plus, Download, Briefcase, UserPlus, ArrowUpRight, ArrowDownRight, FileText, Target, PenSquare, CalendarClock, TrendingUp } from "lucide-react";
+import { Plus, Download, Briefcase, UserPlus, ArrowUpRight, ArrowDownRight, FileText, Target, PenSquare, CalendarClock } from "lucide-react";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip as ReTooltip, XAxis, YAxis } from "recharts";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -39,7 +39,6 @@ function Dashboard() {
       "Metric,Value",
       `Active Open Jobs,${kpis?.activeJobs || 0}`,
       `Total Candidates,${kpis?.totalCandidates || 0}`,
-      `Interviews Scheduled,${kpis?.interviewsScheduled || 0}`,
       `Offers Extended,${kpis?.offersExtended || 0}`,
       `Avg Time To Hire (Days),${kpis?.timeToHireAvgDays || 0}`,
       `Offer Acceptance Rate (%),${kpis?.offerAcceptanceRate || 0}%`,
@@ -68,7 +67,7 @@ function Dashboard() {
     { label: "Open positions", value: kpis.activeJobs, delta: "+4", trend: "up", hint: "vs last week" },
     { label: "Applications today", value: kpis.totalCandidates, delta: "+18%", trend: "up", hint: "vs yesterday" },
     { label: "Total candidates", value: kpis.totalCandidates, delta: "+62", trend: "up", hint: "this month" },
-    { label: "Upcoming interviews", value: kpis.interviewsScheduled, delta: "-2", trend: "down", hint: "next 7 days" },
+    { label: "Avg time to hire", value: `${kpis.timeToHireAvgDays || 24} days`, delta: "-3 days", trend: "up", hint: "vs last month" },
   ] : [];
 
   const chartData = [
@@ -217,52 +216,28 @@ function Dashboard() {
           </CardContent>
         </Card>
 
-        <div className="flex flex-col gap-4">
-          <Card className="shadow-xs">
-            <CardHeader className="pb-2"><CardTitle className="text-base font-semibold">Quick actions</CardTitle></CardHeader>
-            <CardContent className="grid grid-cols-2 gap-2">
-              {[
-                { icon: Briefcase, label: "New job", action: () => setIsCreateJobOpen(true) },
-                { icon: UserPlus, label: "Add candidate", action: () => setIsCreateCandidateOpen(true) },
-                { icon: FileText, label: "Analyze CV", action: () => navigate({ to: "/resume-analyzer" }) },
-                { icon: PenSquare, label: "Write JD", action: () => navigate({ to: "/jd-generator" }) },
-                { icon: Target, label: "Match", action: () => navigate({ to: "/candidate-match" }) },
-                { icon: CalendarClock, label: "Candidates", action: () => navigate({ to: "/candidates" }) },
-              ].map((a) => (
-                <button 
-                  key={a.label} 
-                  onClick={a.action}
-                  className="group flex flex-col items-start gap-2 rounded-lg border border-border bg-card p-3 text-left transition hover:border-primary/40 hover:bg-secondary/60 cursor-pointer"
-                >
-                  <a.icon className="size-4 text-muted-foreground group-hover:text-primary" />
-                  <span className="text-xs font-medium">{a.label}</span>
-                </button>
-              ))}
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-xs">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-base font-semibold">Upcoming interviews</CardTitle>
-              <TrendingUp className="size-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {[
-                ["Priya Menon", "Today · 2:00 PM", "Design panel"],
-                ["Marcus Chen", "Tomorrow · 10:30 AM", "System design"],
-                ["Sofia Alvarez", "Fri · 3:00 PM", "Hiring manager"],
-              ].map(([n, t, k]) => (
-                <div key={n} className="flex items-center justify-between">
-                  <div>
-                    <div className="text-sm font-medium">{n}</div>
-                    <div className="text-xs text-muted-foreground">{k}</div>
-                  </div>
-                  <div className="text-xs tabular-nums text-muted-foreground">{t}</div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
+        <Card className="shadow-xs">
+          <CardHeader className="pb-2"><CardTitle className="text-base font-semibold">Quick actions</CardTitle></CardHeader>
+          <CardContent className="grid grid-cols-2 gap-2">
+            {[
+              { icon: Briefcase, label: "New job", action: () => setIsCreateJobOpen(true) },
+              { icon: UserPlus, label: "Add candidate", action: () => setIsCreateCandidateOpen(true) },
+              { icon: FileText, label: "Analyze CV", action: () => navigate({ to: "/resume-analyzer" }) },
+              { icon: PenSquare, label: "Write JD", action: () => navigate({ to: "/jd-generator" }) },
+              { icon: Target, label: "Match", action: () => navigate({ to: "/candidate-match" }) },
+              { icon: CalendarClock, label: "Candidates", action: () => navigate({ to: "/candidates" }) },
+            ].map((a) => (
+              <button 
+                key={a.label} 
+                onClick={a.action}
+                className="group flex flex-col items-start gap-2 rounded-lg border border-border bg-card p-3 text-left transition hover:border-primary/40 hover:bg-secondary/60 cursor-pointer"
+              >
+                <a.icon className="size-4 text-muted-foreground group-hover:text-primary" />
+                <span className="text-xs font-medium">{a.label}</span>
+              </button>
+            ))}
+          </CardContent>
+        </Card>
       </div>
 
       <CreateJobDialog open={isCreateJobOpen} onOpenChange={setIsCreateJobOpen} />

@@ -7,12 +7,14 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Download, Pencil, Sparkles, Loader2, Copy } from "lucide-react";
+import { Pencil, Sparkles, Loader2, Copy, AlertCircle } from "lucide-react";
 import { useGenerateInterviewKit, useJobs } from "@/hooks/use-api";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/interview-generator")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    jobTitle: (search.jobTitle as string) || undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Interview Generator — TalentOS" },
@@ -25,7 +27,8 @@ export const Route = createFileRoute("/_app/interview-generator")({
 type Question = { question: string, purpose?: string, followUp?: string };
 
 function InterviewGen() {
-  const [role, setRole] = useState("Senior Frontend Engineer");
+  const { jobTitle: searchJobTitle } = Route.useSearch();
+  const [role, setRole] = useState(searchJobTitle || "");
   const [seniority, setSeniority] = useState("sr");
   const [difficulty, setDifficulty] = useState("hard");
   const [duration, setDuration] = useState("45");
@@ -37,12 +40,16 @@ function InterviewGen() {
   const kitData = generateKit.data?.data;
 
   const handleGenerate = async () => {
+    if (!role) {
+      toast.error("Please select a target position title first!");
+      return;
+    }
     try {
       await generateKit.mutateAsync({
         jobTitle: role,
         stage: seniority
       });
-      toast.success("Interview kit generated");
+      toast.success(`Interview kit generated for "${role}"`);
     } catch (err) {
       toast.error("Failed to generate interview kit");
     }
@@ -51,50 +58,60 @@ function InterviewGen() {
   const copyAll = () => {
     if (!kitData) return;
     
-    let text = `Interview Kit: ${role} (${seniority})\n\n`;
+    let text = `Interview Kit for ${role} (${seniority})\n\n`;
     
     if (kitData.behavioral) {
-      text += `=== Behavioral ===\n`;
+      text += `=== Behavioral Questions ===\n`;
       kitData.behavioral.forEach((q: Question, i: number) => text += `${i+1}. ${q.question}\n`);
       text += '\n';
     }
     
     if (kitData.technical) {
-      text += `=== Technical ===\n`;
+      text += `=== Technical Questions ===\n`;
       kitData.technical.forEach((q: Question, i: number) => text += `${i+1}. ${q.question}\n`);
       text += '\n';
     }
     
     if (kitData.situational) {
-      text += `=== Situational ===\n`;
+      text += `=== Situational Questions ===\n`;
       kitData.situational.forEach((q: Question, i: number) => text += `${i+1}. ${q.question}\n`);
     }
 
     navigator.clipboard.writeText(text);
-    toast.success("Copied to clipboard");
+    toast.success("Copied interview kit to clipboard");
   };
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Interview Generator"
-        description="Generate role-specific, structured interview kits."
+        description={role ? `Generating structured interview kit for position: ${role}` : "Select a position title first to generate interview questions."}
         actions={
           <>
             {kitData && <Button variant="outline" size="sm" className="gap-1.5" onClick={copyAll}><Copy className="size-4" /> Copy all</Button>}
-            <Button size="sm" className="gap-1.5" onClick={handleGenerate} disabled={generateKit.isPending}>
+            <Button size="sm" className="gap-1.5" onClick={handleGenerate} disabled={!role || generateKit.isPending}>
               {generateKit.isPending ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />} 
               {kitData ? "Regenerate" : "Generate kit"}
             </Button>
           </>
         }
       />
-      <Card className="shadow-xs">
+
+      {!role && (
+        <Card className="border-warning/50 bg-warning/5 shadow-xs">
+          <CardContent className="flex items-center gap-3 p-4 text-sm font-medium text-warning">
+            <AlertCircle className="size-5 shrink-0" />
+            <span>Please select a target position title below first to generate interview questions.</span>
+          </CardContent>
+        </Card>
+      )}
+
+      <Card className="shadow-xs border-primary/30">
         <CardContent className="grid grid-cols-1 gap-4 p-5 md:grid-cols-4">
           <div className="space-y-1.5">
-            <Label>Target Position / Role</Label>
+            <Label className="font-bold text-foreground">Select Target Position</Label>
             <Select value={role} onValueChange={setRole}>
-              <SelectTrigger><SelectValue placeholder="Select position title..." /></SelectTrigger>
+              <SelectTrigger className="font-semibold"><SelectValue placeholder="Choose a position title..." /></SelectTrigger>
               <SelectContent>
                 {jobsList.length > 0 ? (
                   jobsList.map((j: any) => (
@@ -150,12 +167,18 @@ function InterviewGen() {
       </Card>
       
       <Card className="shadow-xs min-h-[400px]">
-        <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Question bank for {role}</CardTitle></CardHeader>
+        <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">{role ? `Interview Question Bank for ${role}` : "Interview Question Bank"}</CardTitle></CardHeader>
         <CardContent>
-          {generateKit.isPending ? (
+          {!role ? (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <AlertCircle className="size-8 text-warning mb-3" />
+              <h4 className="text-base font-semibold">Select Position Title First</h4>
+              <p className="text-xs text-muted-foreground max-w-xs mt-1">Please select a target position title above, then click Generate Kit.</p>
+            </div>
+          ) : generateKit.isPending ? (
             <div className="flex flex-col items-center justify-center py-20">
               <Loader2 className="size-8 text-primary animate-spin mb-4" />
-              <p className="text-sm text-muted-foreground">Generating interview kit for {role}...</p>
+              <p className="text-sm text-muted-foreground">Generating questions for position {role}...</p>
             </div>
           ) : kitData ? (
             <Tabs defaultValue="behavioral">
@@ -191,7 +214,7 @@ function InterviewGen() {
           ) : (
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <Sparkles className="size-8 text-muted-foreground mb-4 opacity-50" />
-              <p className="text-sm text-muted-foreground">Click generate to create an interview kit for <span className="font-semibold text-foreground">{role}</span></p>
+              <p className="text-sm text-muted-foreground">Click Generate Kit to generate tailored interview questions for <span className="font-semibold text-foreground">{role}</span></p>
             </div>
           )}
         </CardContent>

@@ -143,7 +143,18 @@ export function useCreateJob() {
       qc.invalidateQueries({ queryKey: queryKeys.dashboard });
       toast.success("Job position created successfully");
     },
-    onError: (err: Error) => toast.error(err.message || "Failed to create job position"),
+    onError: (err: Error) => toast.error(err.message || "Failed to create job"),
+  });
+}
+
+export function useUpdateJob() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => api.patch(`/jobs/${id}`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["jobs"] });
+      qc.invalidateQueries({ queryKey: queryKeys.dashboard });
+    },
   });
 }
 
@@ -197,5 +208,24 @@ export function useMatchCandidates() {
   return useMutation({
     mutationFn: (jobId: string) => api.matchCandidates(jobId),
     onError: (err: Error) => toast.error(err.message || "Match request failed"),
+  });
+}
+
+export function useAIConfig() {
+  return useQuery({
+    queryKey: ["ai-config"],
+    queryFn: () => api.getAIConfig(),
+  });
+}
+
+export function useUpdateAIConfig() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { apiKey: string; provider?: string }) => api.updateAIConfig(data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["ai-config"] });
+      toast.success("Gemini API key updated successfully!");
+    },
+    onError: (err: Error) => toast.error(err.message || "Failed to update Gemini API key"),
   });
 }

@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useRef } from "react";
-import { Upload, FileText, CheckCircle2, XCircle, Sparkles, Loader2, Download } from "lucide-react";
+import { Upload, FileText, CheckCircle2, XCircle, Sparkles, Loader2, Download, AlertCircle } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +11,9 @@ import { useUploadResume, useSummarizeResume, useJobs } from "@/hooks/use-api";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/resume-analyzer")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    jobTitle: (search.jobTitle as string) || undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Resume Analyzer — TalentOS" },
@@ -21,8 +24,9 @@ export const Route = createFileRoute("/_app/resume-analyzer")({
 });
 
 function ResumeAnalyzer() {
+  const { jobTitle: searchJobTitle } = Route.useSearch();
   const [dragging, setDragging] = useState(false);
-  const [jobType, setJobType] = useState("Senior Frontend Engineer");
+  const [jobType, setJobType] = useState(searchJobTitle || "");
   const [fileData, setFileData] = useState<{name: string, size: string} | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -33,6 +37,10 @@ function ResumeAnalyzer() {
   const summarizeResume = useSummarizeResume();
 
   const handleFile = async (file: File) => {
+    if (!jobType) {
+      toast.error("Please select a target job position title first!");
+      return;
+    }
     if (!file) return;
     if (file.size > 10 * 1024 * 1024) {
       toast.error("File size must be less than 10MB");
@@ -46,16 +54,19 @@ function ResumeAnalyzer() {
 
     try {
       const res = await uploadResume.mutateAsync(file);
-      toast.success("Resume uploaded & analyzed with AI!");
+      toast.success(`Resume analyzed against position "${jobType}"!`);
     } catch (err) {
       toast.error("Failed to analyze resume");
-      console.error(err);
     }
   };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setDragging(false);
+    if (!jobType) {
+      toast.error("Please select a target position title first!");
+      return;
+    }
     const file = e.dataTransfer.files?.[0];
     if (file) handleFile(file);
   };
@@ -79,16 +90,16 @@ Candidate Name: ${candidate?.firstName || parsedData?.firstName || "Candidate"} 
 Job Position: ${jobType}
 Overall Quality Score: ${analyzedData.resumeQualityScore || 92}/100
 
-AI Summary & Executive Recommendation:
---------------------------------------
+AI Summary & Executive Recommendation for ${jobType}:
+---------------------------------------------------
 ${analyzedData.professionalSummary || analyzedData.experienceSummary || "Strong candidate."}
 
-Key Strengths:
---------------
+Key Strengths for ${jobType}:
+-----------------------------
 ${(analyzedData.strengths || ["Strong technical depth", "Proven domain experience"]).map((s: string) => `- ${s}`).join("\n")}
 
-Skills Audit:
--------------
+Skills Audit against Position Requirements:
+------------------------------------------
 - Matched Skills: ${(analyzedData.skillHighlights || analyzedData.matchedSkills || ["TypeScript", "React"]).join(", ")}
 - Missing Skills: ${(analyzedData.missingSkills || ["GraphQL"]).join(", ")}
 `;
@@ -109,7 +120,7 @@ Skills Audit:
     <div className="flex flex-col gap-6">
       <PageHeader 
         title="Resume Analyzer" 
-        description="Score a resume against any job position with AI-assisted analysis." 
+        description={jobType ? `Scoring candidate resumes for position: ${jobType}` : "Select a position title to score resumes with AI."} 
         actions={
           analyzedData && (
             <Button variant="outline" size="sm" className="gap-1.5" onClick={downloadAnalysisReport}>
@@ -118,17 +129,27 @@ Skills Audit:
           )
         }
       />
+      
+      {!jobType && (
+        <Card className="border-warning/50 bg-warning/5 shadow-xs">
+          <CardContent className="flex items-center gap-3 p-4 text-sm font-medium text-warning">
+            <AlertCircle className="size-5 shrink-0" />
+            <span>Please select a target position title below first to analyze candidate resumes.</span>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
         <div className="lg:col-span-2 flex flex-col gap-4">
-          <Card className="shadow-xs">
-            <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Target Job Position</CardTitle></CardHeader>
+          <Card className="shadow-xs border-primary/30">
+            <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">1. Select Target Position Title</CardTitle></CardHeader>
             <CardContent>
               <Select value={jobType} onValueChange={setJobType}>
-                <SelectTrigger><SelectValue placeholder="Select position title..." /></SelectTrigger>
+                <SelectTrigger className="font-semibold"><SelectValue placeholder="Choose a position title..." /></SelectTrigger>
                 <SelectContent>
                   {jobsList.length > 0 ? (
                     jobsList.map((j: any) => (
-                      <SelectItem key={j.id} value={j.title}>{j.title} ({j.dept})</SelectItem>
+                      <SelectItem key={j.id} value={j.title}>{j.title}</SelectItem>
                     ))
                   ) : (
                     <>
@@ -143,20 +164,21 @@ Skills Audit:
               </Select>
             </CardContent>
           </Card>
+
           <Card className="shadow-xs">
-            <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Upload resume</CardTitle></CardHeader>
+            <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">2. Upload Candidate Resume</CardTitle></CardHeader>
             <CardContent>
               <label
                 onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
                 onDragLeave={() => setDragging(false)}
                 onDrop={handleDrop}
-                className={`flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-8 text-center transition ${dragging ? "border-primary bg-primary/5" : "border-border hover:border-primary/40 hover:bg-secondary/40"} ${isLoading ? 'opacity-50 pointer-events-none' : ''}`}
+                className={`flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-8 text-center transition ${!jobType ? 'opacity-40 cursor-not-allowed border-border' : dragging ? "border-primary bg-primary/5 cursor-pointer" : "border-border hover:border-primary/40 hover:bg-secondary/40 cursor-pointer"} ${isLoading ? 'opacity-50 pointer-events-none' : ''}`}
               >
                 <div className="grid size-10 place-items-center rounded-md bg-secondary">
                   {isLoading ? <Loader2 className="size-4 text-muted-foreground animate-spin" /> : <Upload className="size-4 text-muted-foreground" />}
                 </div>
                 <div className="mt-3 text-sm font-medium">
-                  {isLoading ? "Analyzing resume with AI..." : "Drop resume here or click to upload"}
+                  {!jobType ? "Select a position title above first" : isLoading ? `Analyzing resume for ${jobType}...` : "Drop resume here or click to upload"}
                 </div>
                 <div className="mt-1 text-xs text-muted-foreground">PDF, DOCX up to 10MB</div>
                 <input 
@@ -165,7 +187,7 @@ Skills Audit:
                   accept=".pdf,.doc,.docx" 
                   ref={fileInputRef}
                   onChange={handleFileSelect}
-                  disabled={isLoading}
+                  disabled={!jobType || isLoading}
                 />
               </label>
               {fileData && (
@@ -183,14 +205,22 @@ Skills Audit:
         </div>
         
         <div className="lg:col-span-3 flex flex-col gap-4">
-          {analyzedData ? (
+          {!jobType ? (
+            <div className="flex h-full min-h-[400px] flex-col items-center justify-center rounded-lg border border-dashed border-border p-8 text-center bg-secondary/20">
+              <AlertCircle className="size-10 text-warning mb-3" />
+              <h3 className="text-lg font-bold">No Position Title Selected</h3>
+              <p className="text-sm text-muted-foreground max-w-sm mt-1">
+                Please select a job position title on the left to start analyzing candidate resumes against its requirements.
+              </p>
+            </div>
+          ) : analyzedData ? (
             <>
               <Card className="shadow-xs">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <div>
-                    <CardTitle className="text-sm font-semibold">Overall AI match score</CardTitle>
+                    <CardTitle className="text-sm font-semibold">AI Match Score for {jobType}</CardTitle>
                     <p className="mt-0.5 text-xs text-muted-foreground">
-                      Candidate: {candidate?.firstName || parsedData?.firstName || "Uploaded Resume"} {candidate?.lastName || parsedData?.lastName || ""} · Position: {jobType}
+                      Candidate: {candidate?.firstName || parsedData?.firstName || "Candidate"} {candidate?.lastName || parsedData?.lastName || ""}
                     </p>
                   </div>
                   <div className="flex items-baseline gap-1">
@@ -215,9 +245,10 @@ Skills Audit:
                   ))}
                 </CardContent>
               </Card>
+
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <Card className="shadow-xs">
-                  <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold text-success flex items-center gap-1.5"><CheckCircle2 className="size-4" /> Core strengths & skills</CardTitle></CardHeader>
+                  <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold text-success flex items-center gap-1.5"><CheckCircle2 className="size-4" /> Core strengths for {jobType}</CardTitle></CardHeader>
                   <CardContent className="flex flex-wrap gap-1.5">
                     {(analyzedData.skillHighlights || analyzedData.strengths || ["TypeScript", "React", "Node.js"]).map((s: string) => (
                       <Badge key={s} variant="secondary" className="gap-1 rounded-full bg-success/10 text-success text-[11px]">
@@ -227,7 +258,7 @@ Skills Audit:
                   </CardContent>
                 </Card>
                 <Card className="shadow-xs">
-                  <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold text-warning flex items-center gap-1.5"><XCircle className="size-4" /> Missing competencies</CardTitle></CardHeader>
+                  <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold text-warning flex items-center gap-1.5"><XCircle className="size-4" /> Missing position skills</CardTitle></CardHeader>
                   <CardContent className="flex flex-wrap gap-1.5">
                     {(analyzedData.missingSkills || analyzedData.weaknesses || ["GraphQL", "Kubernetes"]).map((s: string) => (
                       <Badge key={s} variant="secondary" className="gap-1 rounded-full bg-warning/10 text-warning text-[11px]">
@@ -237,13 +268,14 @@ Skills Audit:
                   </CardContent>
                 </Card>
               </div>
+
               <Card className="shadow-xs">
                 <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Executive AI Evaluation</CardTitle></CardHeader>
                 <CardContent className="space-y-4 text-sm">
                   <div className="flex items-start gap-2.5 rounded-md border border-primary/20 bg-primary/5 p-4">
                     <Sparkles className="mt-0.5 size-4 shrink-0 text-primary" />
                     <div>
-                      <div className="text-sm font-semibold text-foreground">Summary & Hiring Recommendation for {jobType}</div>
+                      <div className="text-sm font-semibold text-foreground">Hiring Recommendation for {jobType}</div>
                       <p className="text-xs text-foreground/90 mt-1 leading-relaxed">{analyzedData.professionalSummary || analyzedData.experienceSummary}</p>
                     </div>
                   </div>
@@ -253,9 +285,9 @@ Skills Audit:
           ) : (
             <div className="flex h-full min-h-[400px] flex-col items-center justify-center rounded-lg border border-dashed border-border p-8 text-center bg-secondary/20">
               <Sparkles className="size-8 text-muted-foreground mb-4 opacity-50" />
-              <h3 className="text-lg font-medium">No resume analyzed yet</h3>
+              <h3 className="text-lg font-medium">Position Selected: {jobType}</h3>
               <p className="text-sm text-muted-foreground max-w-sm mt-1">
-                Upload a candidate's resume on the left to see their AI match score, matched skills, and professional summary against <span className="font-semibold text-foreground">{jobType}</span>.
+                Now upload a candidate's resume on the left to evaluate skills and match score specifically against <span className="font-semibold text-foreground">{jobType}</span>.
               </p>
             </div>
           )}

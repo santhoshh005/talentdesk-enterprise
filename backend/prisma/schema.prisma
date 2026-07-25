@@ -92,6 +92,7 @@ model OrganizationSetting {
   careerPageTheme    String       @default("dark")
   autoRejectEmails   Boolean      @default(false)
   aiProviderPreference String     @default("auto") // auto, openai, anthropic, gemini
+  geminiApiKey       String?
   emailSenderName    String?
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt

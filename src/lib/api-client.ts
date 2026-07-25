@@ -93,12 +93,8 @@ export const api = {
     apiFetch('/ai/generate-jd', { method: 'POST', body: JSON.stringify(data) }),
   matchCandidates: (jobId: string) => apiFetch(`/ai/match-candidates/${jobId}`),
 
-  // Analytics & Dashboard
-  getDashboardStats: () => apiFetch('/analytics/dashboard'),
-
-  // Team & Organization
-  getOrganization: () => apiFetch('/organization'),
-  getUsers: () => apiFetch('/users'),
-  inviteUser: (data: { email: string; role: string; firstName: string; lastName: string }) =>
-    apiFetch('/users/invite', { method: 'POST', body: JSON.stringify(data) }),
+  // AI Configuration
+  getAIConfig: () => apiFetch('/ai-config'),
+  updateAIConfig: (data: { apiKey: string; provider?: string }) =>
+    apiFetch('/ai-config', { method: 'POST', body: JSON.stringify(data) }),
 };

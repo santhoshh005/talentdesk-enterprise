@@ -5,7 +5,8 @@ export class AIController {
   static async summarizeResume(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { text } = req.body;
-      const result = await AIProviderService.summarizeResume(text || 'Senior Full Stack Engineer resume content');
+      const orgId = req.user?.organizationId;
+      const result = await AIProviderService.summarizeResume(text || 'Senior Full Stack Engineer resume content', orgId);
       res.json({ success: true, data: result });
     } catch (err) {
       next(err);
@@ -14,11 +15,9 @@ export class AIController {
 
   static async matchCandidate(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { candidate, job } = req.body;
-      const result = await AIProviderService.matchCandidate(
-        candidate || { skills: ['Go', 'Kafka', 'AWS'] },
-        job || { title: 'Staff Backend Engineer' }
-      );
+      const { candidateId, jobId } = req.body;
+      const orgId = req.user?.organizationId;
+      const result = await AIProviderService.matchCandidate(candidateId || 'c1', jobId || 'j1', orgId);
       res.json({ success: true, data: result });
     } catch (err) {
       next(err);
@@ -27,12 +26,13 @@ export class AIController {
 
   static async generateJD(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { title, department, keySkills } = req.body;
-      const result = await AIProviderService.generateJobDescription({
+      const { title, department, keyResponsibilities } = req.body;
+      const orgId = req.user?.organizationId;
+      const result = await AIProviderService.generateJD({
         title: title || 'Senior Software Engineer',
         department,
-        keySkills: Array.isArray(keySkills) ? keySkills : (keySkills ? String(keySkills).split(',') : ['TypeScript', 'React', 'Node.js']),
-      });
+        keyResponsibilities: Array.isArray(keyResponsibilities) ? keyResponsibilities : [],
+      }, orgId);
       res.json({ success: true, data: result });
     } catch (err) {
       next(err);
@@ -42,10 +42,11 @@ export class AIController {
   static async generateInterviewKit(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { jobTitle, stage } = req.body;
+      const orgId = req.user?.organizationId;
       const result = await AIProviderService.generateInterviewKit({
         jobTitle: jobTitle || 'Senior Product Designer',
         stage,
-      });
+      }, orgId);
       res.json({ success: true, data: result });
     } catch (err) {
       next(err);
@@ -55,8 +56,13 @@ export class AIController {
   static async assistantChat(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { query } = req.body;
-      const reply = await AIProviderService.recruiterAssistantChat(query || 'Summarize top candidates');
-      res.json({ success: true, data: { response: reply } });
+      const orgId = req.user?.organizationId;
+      const reply = await AIProviderService.callGeminiJson<{ reply: string }>(
+        `Answer as TalentOS AI Assistant: ${query || 'Hello'}`,
+        { reply: 'I am your TalentOS AI Recruiting Assistant.' },
+        orgId
+      );
+      res.json({ success: true, data: { response: reply.reply } });
     } catch (err) {
       next(err);
     }
