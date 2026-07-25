@@ -38,6 +38,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/hooks/use-auth";
 
 type NavItem = { title: string; url: string; icon: React.ComponentType<{ className?: string }> };
 
@@ -95,6 +96,9 @@ function NavGroup({ label, items, currentPath }: { label: string; items: NavItem
 
 export function AppSidebar() {
   const currentPath = useRouterState({ select: (r) => r.location.pathname });
+  const { user } = useAuth();
+  
+  const orgName = user?.organization?.name || "Acme Corporation";
 
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
@@ -106,13 +110,13 @@ export function AppSidebar() {
             </div>
             <div className="min-w-0 flex-1">
               <div className="truncate text-sm font-semibold text-sidebar-foreground">TalentOS</div>
-              <div className="truncate text-[11px] text-muted-foreground">Acme Corporation</div>
+              <div className="truncate text-[11px] text-muted-foreground">{orgName}</div>
             </div>
             <ChevronDown className="size-3.5 text-muted-foreground" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-56">
             <DropdownMenuLabel>Workspaces</DropdownMenuLabel>
-            <DropdownMenuItem>Acme Corporation</DropdownMenuItem>
+            <DropdownMenuItem>{orgName}</DropdownMenuItem>
             <DropdownMenuItem>Northwind Talent</DropdownMenuItem>
             <DropdownMenuItem>Globex HR</DropdownMenuItem>
             <DropdownMenuSeparator />

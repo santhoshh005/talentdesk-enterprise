@@ -1,8 +1,10 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
 import { AuthShell } from "@/components/auth-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/signup")({
   head: () => ({
@@ -16,21 +18,45 @@ export const Route = createFileRoute("/signup")({
 
 function SignupPage() {
   const navigate = useNavigate();
+  const { register } = useAuth();
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [company, setCompany] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    try {
+      await register({ firstName, lastName, email, organizationName: company, password });
+      navigate({ to: "/dashboard" });
+    } catch (err: any) {
+      setError(err.message || "Registration failed.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <AuthShell
       title="Create your workspace"
       subtitle="Start your 14-day free trial. No credit card required."
       footer={<>Already have an account? <Link to="/login" className="font-medium text-primary hover:underline">Sign in</Link></>}
     >
-      <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); navigate({ to: "/dashboard" }); }}>
+      <form className="space-y-4" onSubmit={handleSubmit}>
+        {error && <div className="rounded-md bg-destructive/10 p-2.5 text-xs text-destructive">{error}</div>}
         <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1.5"><Label>First name</Label><Input required autoComplete="given-name" /></div>
-          <div className="space-y-1.5"><Label>Last name</Label><Input required autoComplete="family-name" /></div>
+          <div className="space-y-1.5"><Label>First name</Label><Input value={firstName} onChange={(e) => setFirstName(e.target.value)} required autoComplete="given-name" /></div>
+          <div className="space-y-1.5"><Label>Last name</Label><Input value={lastName} onChange={(e) => setLastName(e.target.value)} required autoComplete="family-name" /></div>
         </div>
-        <div className="space-y-1.5"><Label>Work email</Label><Input type="email" required autoComplete="email" /></div>
-        <div className="space-y-1.5"><Label>Company</Label><Input required /></div>
-        <div className="space-y-1.5"><Label>Password</Label><Input type="password" required autoComplete="new-password" /></div>
-        <Button type="submit" className="w-full">Create workspace</Button>
+        <div className="space-y-1.5"><Label>Work email</Label><Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" /></div>
+        <div className="space-y-1.5"><Label>Company</Label><Input value={company} onChange={(e) => setCompany(e.target.value)} required /></div>
+        <div className="space-y-1.5"><Label>Password</Label><Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="new-password" /></div>
+        <Button type="submit" className="w-full" disabled={loading}>{loading ? "Creating…" : "Create workspace"}</Button>
         <p className="text-xs text-muted-foreground">By continuing you agree to our Terms and Privacy Policy.</p>
       </form>
     </AuthShell>

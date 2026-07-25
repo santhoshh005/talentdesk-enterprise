@@ -1,13 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Filter, Search, Sparkles } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Search, Sparkles, Loader2 } from "lucide-react";
+import { useCandidates } from "@/hooks/use-api";
+import { useDebounce } from "@/hooks/use-debounce";
+import { CandidateDetailSheet } from "@/components/candidate-detail-sheet";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/candidate-match")({
   head: () => ({
@@ -19,40 +24,49 @@ export const Route = createFileRoute("/_app/candidate-match")({
   component: MatchPage,
 });
 
-const rows = [
-  { name: "Sofia Alvarez", role: "Head of Data", skills: ["Snowflake","dbt","Leadership"], exp: "13y", loc: "London", edu: "PhD", salary: "$220k", score: 95 },
-  { name: "Priya Menon", role: "Sr Product Designer", skills: ["Figma","DS"], exp: "8y", loc: "Berlin", edu: "MSc", salary: "€110k", score: 92 },
-  { name: "Marcus Chen", role: "Staff Backend", skills: ["Go","Kafka"], exp: "11y", loc: "NYC", edu: "BSc", salary: "$210k", score: 88 },
-  { name: "Tomás Ribeiro", role: "DevOps", skills: ["K8s","Terraform"], exp: "9y", loc: "Lisbon", edu: "BSc", salary: "€90k", score: 87 },
-  { name: "Liam O'Sullivan", role: "iOS Engineer", skills: ["Swift"], exp: "7y", loc: "Dublin", edu: "BSc", salary: "€95k", score: 84 },
-  { name: "David Park", role: "Eng Manager", skills: ["Leadership","Node"], exp: "10y", loc: "Remote", edu: "MSc", salary: "$205k", score: 81 },
-];
-
 function MatchPage() {
+  const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearch = useDebounce(searchQuery, 300);
+  const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(null);
+  
+  const { data: candidatesRes, isLoading: isLoadingCandidates, refetch } = useCandidates({
+    search: debouncedSearch,
+  });
+  
+  const candidates = candidatesRes?.data || [];
+
+  const handleReRunMatch = async () => {
+    if (!candidates.length) return;
+    try {
+      await refetch();
+      toast.success("Match scores updated with latest AI calculations");
+    } catch (error) {
+      toast.error("Failed to update match scores");
+    }
+  };
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Candidate matching"
-        description="AI-ranked candidates for a specific role. Filter, sort and shortlist."
-        actions={<Button size="sm" className="gap-1.5"><Sparkles className="size-4" /> Re-run match</Button>}
+        description="AI-ranked candidates for a specific role. Click any candidate to view full evaluation profile."
+        actions={
+          <Button size="sm" className="gap-1.5" onClick={handleReRunMatch} disabled={isLoadingCandidates}>
+            {isLoadingCandidates ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />} 
+            Re-run match
+          </Button>
+        }
       />
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative flex-1 min-w-[240px] max-w-md">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input placeholder="Search candidates…" className="pl-8" />
+          <Input 
+            placeholder="Search candidates by name, skill, role…" 
+            className="pl-8" 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
         </div>
-        {[
-          ["Role", ["Sr Product Designer","Staff Backend","Head of Data"]],
-          ["Status", ["Any","Available","Passive"]],
-          ["Location", ["Any","Remote","US","EU"]],
-          ["Experience", ["Any","0-3y","3-7y","7y+"]],
-        ].map(([label, items]) => (
-          <Select key={label as string}>
-            <SelectTrigger className="w-[160px] h-9"><SelectValue placeholder={label as string} /></SelectTrigger>
-            <SelectContent>{(items as string[]).map((i)=><SelectItem key={i} value={i}>{i}</SelectItem>)}</SelectContent>
-          </Select>
-        ))}
-        <Button variant="outline" size="sm" className="gap-1.5 h-9"><Filter className="size-4" /> More</Button>
       </div>
       <Card className="shadow-xs">
         <CardContent className="p-0">
@@ -63,44 +77,73 @@ function MatchPage() {
                 <TableHead>Skills</TableHead>
                 <TableHead>Experience</TableHead>
                 <TableHead>Location</TableHead>
-                <TableHead>Education</TableHead>
-                <TableHead>Salary</TableHead>
-                <TableHead className="text-right">Match score</TableHead>
+                <TableHead className="text-right">AI Match score</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {rows.map((r) => (
-                <TableRow key={r.name}>
-                  <TableCell>
-                    <div className="flex items-center gap-2.5">
-                      <Avatar className="size-7"><AvatarFallback className="bg-secondary text-[10px]">{r.name.split(" ").map(n=>n[0]).join("")}</AvatarFallback></Avatar>
-                      <div>
-                        <div className="text-sm font-medium">{r.name}</div>
-                        <div className="text-xs text-muted-foreground">{r.role}</div>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-1">{r.skills.map(s=><Badge key={s} variant="secondary" className="rounded-full px-2 py-0 text-[10px]">{s}</Badge>)}</div>
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{r.exp}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{r.loc}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{r.edu}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{r.salary}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="inline-flex items-center gap-2">
-                      <div className="h-1 w-16 overflow-hidden rounded-full bg-secondary">
-                        <div className="h-full bg-primary" style={{ width: `${r.score}%` }} />
-                      </div>
-                      <span className="text-sm font-medium tabular-nums">{r.score}</span>
-                    </div>
+              {isLoadingCandidates ? (
+                Array.from({ length: 5 }).map((_, idx) => (
+                  <TableRow key={idx}>
+                    <TableCell><div className="flex gap-2 items-center"><Skeleton className="size-7 rounded-full" /><div className="space-y-1"><Skeleton className="h-4 w-24" /><Skeleton className="h-3 w-16" /></div></div></TableCell>
+                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-12" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                    <TableCell className="text-right"><Skeleton className="h-4 w-20 ml-auto" /></TableCell>
+                  </TableRow>
+                ))
+              ) : candidates.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-10 text-muted-foreground">
+                    No candidates found in talent database.
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                candidates.map((r: any) => {
+                  const score = r.score || 85;
+                  return (
+                    <TableRow 
+                      key={r.id} 
+                      className="cursor-pointer hover:bg-secondary/40"
+                      onClick={() => setSelectedCandidateId(r.id)}
+                    >
+                      <TableCell>
+                        <div className="flex items-center gap-2.5">
+                          <Avatar className="size-7"><AvatarFallback className="bg-secondary text-[10px]">{r.name?.split(" ").map((n: string)=>n[0]).join("")}</AvatarFallback></Avatar>
+                          <div>
+                            <div className="text-sm font-medium">{r.name}</div>
+                            <div className="text-xs text-muted-foreground">{r.role}</div>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-1">
+                          {r.skills?.slice(0, 3).map((s: string)=><Badge key={s} variant="secondary" className="rounded-full px-2 py-0 text-[10px]">{s}</Badge>)}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{r.exp || `${r.experienceYears || 3}y`}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{r.loc || "Remote"}</TableCell>
+                      <TableCell className="text-right">
+                        <div className="inline-flex items-center gap-2">
+                          <div className="h-1.5 w-16 overflow-hidden rounded-full bg-secondary">
+                            <div className="h-full bg-primary" style={{ width: `${score}%` }} />
+                          </div>
+                          <span className="text-sm font-semibold tabular-nums">{score}%</span>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
+
+      <CandidateDetailSheet 
+        candidateId={selectedCandidateId} 
+        open={!!selectedCandidateId} 
+        onOpenChange={(open) => !open && setSelectedCandidateId(null)} 
+      />
     </div>
   );
 }

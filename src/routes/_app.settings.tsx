@@ -22,7 +22,7 @@ const nav: NavEntry[] = [
   { to: "/settings/security", label: "Security" },
   { to: "/settings/api-keys", label: "API keys" },
   { to: "/settings/roles", label: "Roles" },
-  { to: "/settings/audit-logs", label: "Audit logs" },
+  { to: "/settings/audit", label: "Audit logs" },
 ];
 
 function SettingsLayout() {
@@ -37,7 +37,7 @@ function SettingsLayout() {
             return (
               <Link
                 key={n.to}
-                to={n.to as "/settings"}
+                to={n.to as any}
                 className={cn(
                   "rounded-md px-3 py-1.5 text-sm transition-colors",
                   active ? "bg-secondary font-medium text-foreground" : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground",

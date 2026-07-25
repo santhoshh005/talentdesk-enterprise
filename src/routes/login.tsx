@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useAuth } from "@/hooks/use-auth";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -18,28 +20,44 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    try {
+      await login(email, password);
+      navigate({ to: "/dashboard" });
+    } catch (err: any) {
+      setError(err.message || "Invalid credentials.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <AuthShell
       title="Welcome back"
       subtitle="Sign in to your TalentOS workspace."
       footer={<>Don't have an account? <Link to="/signup" className="font-medium text-primary hover:underline">Create one</Link></>}
     >
-      <form
-        className="space-y-4"
-        onSubmit={(e) => {
-          e.preventDefault();
-          setLoading(true);
-          setTimeout(() => navigate({ to: "/dashboard" }), 400);
-        }}
-      >
-        <div className="space-y-1.5"><Label htmlFor="email">Work email</Label><Input id="email" type="email" placeholder="you@company.com" required autoComplete="email" /></div>
+      <form className="space-y-4" onSubmit={handleSubmit}>
+        {error && <div className="rounded-md bg-destructive/10 p-2.5 text-xs text-destructive">{error}</div>}
+        <div className="space-y-1.5">
+          <Label htmlFor="email">Work email</Label>
+          <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@company.com" required autoComplete="email" />
+        </div>
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
             <Label htmlFor="password">Password</Label>
             <Link to="/forgot-password" className="text-xs font-medium text-primary hover:underline">Forgot?</Link>
           </div>
-          <Input id="password" type="password" required autoComplete="current-password" />
+          <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="current-password" />
         </div>
         <label className="flex items-center gap-2 text-sm text-muted-foreground">
           <Checkbox /> Keep me signed in
@@ -49,7 +67,7 @@ function LoginPage() {
           <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
           <div className="relative flex justify-center"><span className="bg-background px-2 text-xs text-muted-foreground">or</span></div>
         </div>
-        <Button type="button" variant="outline" className="w-full">Continue with SSO</Button>
+        <Button type="button" variant="outline" className="w-full" onClick={() => toast("SSO coming soon")}>Continue with SSO</Button>
       </form>
     </AuthShell>
   );

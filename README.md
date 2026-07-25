@@ -1,29 +1,56 @@
-# Welcome to your Lovable project
+# TalentOS — Enterprise AI Recruitment Platform
 
-This project was built with [Lovable](https://lovable.dev).
+Production-ready, enterprise-grade AI Recruitment Platform comparable to Greenhouse, Lever, Ashby, and Workday Recruiting.
 
-## Build with Lovable
+---
 
-Open your project in the [Lovable editor](https://lovable.dev) and keep building.
+## Technical Stack
 
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: connect the project to GitHub and every change made in Lovable is committed straight to your repository.
-- **Full ownership**: this code is yours. Push to your repository and your changes sync back into Lovable, ready for your next prompt.
+- **Frontend**: TanStack Start, React 19, TypeScript, Tailwind CSS
+- **Backend API**: Express.js, Node.js, TypeScript, Clean Architecture
+- **Database**: PostgreSQL 16 + Prisma ORM
+- **Background Processing**: Redis + BullMQ
+- **AI Infrastructure**: Multi-provider abstraction layer (OpenAI, Anthropic, Google Gemini)
+- **Containerization**: Docker & Docker Compose
+- **Testing**: Vitest & Playwright
 
-## Development
+---
 
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+## Quick Start (Local Development)
 
-```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
+### 1. Run full stack via Docker Compose:
+```bash
+docker-compose up --build
+```
+
+### 2. Run backend locally:
+```bash
+cd backend
+npm install
+npx prisma db push
+npx ts-node prisma/seed.ts
 npm run dev
 ```
 
-## Built with
+### 3. Run frontend locally:
+```bash
+npm install
+npm run dev
+```
 
-- TanStack Start
-- TypeScript
-- React
-- Tailwind CSS
+---
+
+## Seed Accounts
+
+- **Admin Account**: `admin@talentos.ai` / `Password123!`
+- **Recruiter Account**: `recruiter@talentos.ai` / `Password123!`
+
+---
+
+## Key Features
+
+- **Candidate Pipeline**: Live Kanban drag-and-drop board with stage audit logs.
+- **AI Resume Parser & Analyzer**: Structured text extraction, resume scoring, and strength evaluation.
+- **Explainable AI Matching**: Weighted skill, experience, and education matching scores.
+- **AI Job Description & Interview Kit Generator**: Automated requisition & question bank creation.
+- **Enterprise Security**: JWT with HTTP-Only Cookies, RBAC, Pino logging, and audit tracking.

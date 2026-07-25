@@ -12,8 +12,22 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/hooks/use-auth";
+import { useNavigate } from "@tanstack/react-router";
 
 export function AppTopbar({ onOpenPalette }: { onOpenPalette: () => void }) {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate({ to: "/login" });
+  };
+
+  const userInitials = user ? `${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`.toUpperCase() : "U";
+  const fullName = user ? `${user.firstName || ""} ${user.lastName || ""}`.trim() : "User";
+  const email = user?.email || "";
+
   return (
     <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-3 border-b border-border bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       <SidebarTrigger className="-ml-1 size-8" />
@@ -32,7 +46,7 @@ export function AppTopbar({ onOpenPalette }: { onOpenPalette: () => void }) {
         <Button variant="ghost" size="icon" className="size-9 md:hidden" onClick={onOpenPalette} aria-label="Search">
           <Search className="size-4" />
         </Button>
-        <Button variant="ghost" size="icon" className="size-9" aria-label="Help">
+        <Button variant="ghost" size="icon" className="size-9" aria-label="Help" onClick={() => navigate({ to: "/help" })}>
           <HelpCircle className="size-4" />
         </Button>
         <DropdownMenu>
@@ -65,21 +79,21 @@ export function AppTopbar({ onOpenPalette }: { onOpenPalette: () => void }) {
           <DropdownMenuTrigger asChild>
             <button className="flex items-center gap-2 rounded-md p-1 pl-1.5 hover:bg-secondary transition-colors" aria-label="Account menu">
               <Avatar className="size-7">
-                <AvatarFallback className="bg-primary text-primary-foreground text-[11px] font-medium">AR</AvatarFallback>
+                <AvatarFallback className="bg-primary text-primary-foreground text-[11px] font-medium">{userInitials}</AvatarFallback>
               </Avatar>
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel className="flex flex-col gap-0.5">
-              <span className="text-sm font-medium">Alex Rivera</span>
-              <span className="text-xs font-normal text-muted-foreground">alex@acmecorp.com</span>
+              <span className="text-sm font-medium">{fullName}</span>
+              <span className="text-xs font-normal text-muted-foreground">{email}</span>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Profile</DropdownMenuItem>
-            <DropdownMenuItem>Settings</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate({ to: "/settings" })}>Profile</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate({ to: "/settings" })}>Settings</DropdownMenuItem>
             <DropdownMenuItem>Keyboard shortcuts</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Sign out</DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout}>Sign out</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

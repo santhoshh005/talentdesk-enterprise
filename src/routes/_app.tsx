@@ -1,13 +1,41 @@
-import { useState } from "react";
-import { Outlet, createFileRoute } from "@tanstack/react-router";
+import { useState, useEffect } from "react";
+import { Outlet, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { AppTopbar } from "@/components/app-topbar";
 import { CommandPalette, useCommandPalette } from "@/components/command-palette";
+import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/_app")({
-  component: AppLayout,
+  component: AppLayoutWithGuard,
 });
+
+function AppLayoutWithGuard() {
+  const { isAuthenticated, isLoading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        navigate({ to: "/login" });
+      }
+    }
+  }, [isLoading, isAuthenticated, navigate]);
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-3">
+          <div className="size-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          <p className="text-sm text-muted-foreground">Loading TalentOS…</p>
+        </div>
+      </div>
+    );
+  }
+
+  return <AppLayout />;
+}
 
 function AppLayout() {
   const { open, setOpen } = useCommandPalette();

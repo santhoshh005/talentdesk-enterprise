@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -16,23 +16,29 @@ export const Route = createFileRoute("/_app/ai-lab")({
 });
 
 const experiments = [
-  { icon: Bot, title: "Screening co-pilot", desc: "Auto-screen inbound applications with configurable criteria." },
-  { icon: Mail, title: "Outreach writer", desc: "Personalized cold outreach for passive candidates." },
-  { icon: Mic, title: "Interview transcriber", desc: "Transcribe and summarize interviews with action items." },
-  { icon: ScanSearch, title: "Bias review", desc: "Flag potentially biased language in JDs and feedback." },
-  { icon: MessageSquare, title: "Candidate chatbot", desc: "24/7 FAQ chat for candidates on your careers page." },
-  { icon: Wand2, title: "Offer optimizer", desc: "Suggest offer components based on market data." },
+  { icon: Bot, title: "Screening co-pilot", desc: "Auto-screen inbound applications with configurable criteria.", route: "/recruitment" },
+  { icon: Mail, title: "Outreach writer", desc: "Personalized cold outreach for passive candidates.", route: "/jd-generator" },
+  { icon: Mic, title: "Interview transcriber", desc: "Transcribe and summarize interviews with action items.", route: "/interview-generator" },
+  { icon: ScanSearch, title: "Bias review", desc: "Flag potentially biased language in JDs and feedback.", route: "/candidate-match" },
+  { icon: MessageSquare, title: "Candidate chatbot", desc: "24/7 FAQ chat for candidates on your careers page.", route: "/boolean-search" },
+  { icon: Wand2, title: "Offer optimizer", desc: "Suggest offer components based on market data.", route: "/analytics" },
 ];
 
 function AILab() {
+  const navigate = useNavigate();
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader title="AI Lab" description="Experimental tools we're building. Give feedback and help shape what ships." />
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {experiments.map((e) => (
-          <Card key={e.title} className="shadow-xs transition hover:border-primary/30">
+          <Card 
+            key={e.title} 
+            className="shadow-xs transition cursor-pointer hover:border-primary/40 hover:shadow-md"
+            onClick={() => navigate({ to: e.route as any })}
+          >
             <CardHeader className="flex flex-row items-start justify-between pb-2">
-              <div className="grid size-9 place-items-center rounded-md bg-primary/10 text-primary">
+              <div className="grid size-9 place-items-center rounded-md bg-primary/10 text-primary transition-transform group-hover:scale-110">
                 <e.icon className="size-4" />
               </div>
               <Badge variant="secondary" className="rounded-full bg-warning/10 text-warning text-[10px]">Beta</Badge>
@@ -40,7 +46,11 @@ function AILab() {
             <CardContent>
               <CardTitle className="text-sm font-semibold">{e.title}</CardTitle>
               <p className="mt-1 text-sm text-muted-foreground">{e.desc}</p>
-              <Button variant="ghost" size="sm" className="mt-3 -ml-2 gap-1 text-primary hover:text-primary">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="mt-3 -ml-2 gap-1 text-primary hover:text-primary hover:bg-primary/5"
+              >
                 Try it <ArrowRight className="size-3.5" />
               </Button>
             </CardContent>
