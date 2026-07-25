@@ -1,6 +1,12 @@
 const getApiBaseUrl = () => {
-  const envUrl = import.meta.env.VITE_API_BASE_URL;
-  if (envUrl) return envUrl;
+  let envUrl = import.meta.env.VITE_API_BASE_URL || '';
+  if (envUrl) {
+    envUrl = envUrl.trim().replace(/\/$/, '');
+    if (!envUrl.endsWith('/api/v1')) {
+      envUrl = `${envUrl}/api/v1`;
+    }
+    return envUrl;
+  }
   if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
     return 'https://talentos-backend.onrender.com/api/v1';
   }
