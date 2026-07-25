@@ -2,7 +2,7 @@ const getApiBaseUrl = () => {
   const envUrl = import.meta.env.VITE_API_BASE_URL;
   if (envUrl) return envUrl;
   if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
-    return '/api/v1';
+    return 'https://talentos-backend.onrender.com/api/v1';
   }
   return 'http://localhost:4000/api/v1';
 };
@@ -66,31 +66,32 @@ export const api = {
   },
   getJobById: (id: string) => apiFetch(`/jobs/${id}`),
   createJob: (data: any) => apiFetch('/jobs', { method: 'POST', body: JSON.stringify(data) }),
-  getJobPipeline: (jobId: string) => apiFetch(`/jobs/${jobId}/pipeline`),
+  updateJob: (id: string, data: any) => apiFetch(`/jobs/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
 
-  // Applications & Pipeline
-  moveStage: (data: { candidateId?: string; applicationId?: string; toStageName?: string; toStageId?: string }) =>
-    apiFetch('/applications/move-stage', { method: 'POST', body: JSON.stringify(data) }),
-  addNote: (applicationId: string, content: string) =>
-    apiFetch(`/applications/${applicationId}/notes`, { method: 'POST', body: JSON.stringify({ content }) }),
+  // Applications
+  getApplications: (params?: Record<string, string>) => {
+    const query = new URLSearchParams(params).toString();
+    return apiFetch(`/applications${query ? `?${query}` : ''}`);
+  },
+  updateApplicationStage: (id: string, stageId: string) =>
+    apiFetch(`/applications/${id}/stage`, { method: 'PATCH', body: JSON.stringify({ stageId }) }),
 
-  // AI Tools
-  summarizeResume: (text: string) => apiFetch('/ai/resume-summary', { method: 'POST', body: JSON.stringify({ text }) }),
-  matchCandidate: (candidate?: any, job?: any) => apiFetch('/ai/candidate-match', { method: 'POST', body: JSON.stringify({ candidate, job }) }),
-  generateJD: (data: { title: string; department?: string; keySkills?: string[] }) =>
+  // AI Features
+  parseResume: (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return apiFetch('/ai/parse-resume', { method: 'POST', body: formData });
+  },
+  generateJd: (data: { title: string; department?: string; keyResponsibilities?: string[] }) =>
     apiFetch('/ai/generate-jd', { method: 'POST', body: JSON.stringify(data) }),
-  generateInterviewKit: (data: { jobTitle: string; stage?: string }) =>
-    apiFetch('/ai/interview-generator', { method: 'POST', body: JSON.stringify(data) }),
-  assistantChat: (query: string) => apiFetch('/ai/assistant', { method: 'POST', body: JSON.stringify({ query }) }),
+  matchCandidates: (jobId: string) => apiFetch(`/ai/match-candidates/${jobId}`),
 
   // Analytics & Dashboard
-  getDashboardMetrics: () => apiFetch('/analytics/dashboard'),
+  getDashboardStats: () => apiFetch('/analytics/dashboard'),
 
-  // Search
-  booleanSearch: (data: { query: string; location?: string; minExp?: number; stage?: string }) =>
-    apiFetch('/search/boolean', { method: 'POST', body: JSON.stringify(data) }),
-
-  // Organization
-  getOrganization: () => apiFetch('/organizations'),
-  updateOrgSettings: (data: any) => apiFetch('/organizations/settings', { method: 'PUT', body: JSON.stringify(data) }),
+  // Team & Organization
+  getOrganization: () => apiFetch('/organization'),
+  getUsers: () => apiFetch('/users'),
+  inviteUser: (data: { email: string; role: string; firstName: string; lastName: string }) =>
+    apiFetch('/users/invite', { method: 'POST', body: JSON.stringify(data) }),
 };
