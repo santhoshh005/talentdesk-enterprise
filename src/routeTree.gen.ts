@@ -17,7 +17,6 @@ import { Route as SignupRouteImport } from './routes/signup'
 import { Route as AppCandidateMatchRouteImport } from './routes/_app.candidate-match'
 import { Route as AppCandidatesRouteImport } from './routes/_app.candidates'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
-import { Route as AppInterviewGeneratorRouteImport } from './routes/_app.interview-generator'
 import { Route as AppJdGeneratorRouteImport } from './routes/_app.jd-generator'
 import { Route as AppJobsRouteImport } from './routes/_app.jobs'
 import { Route as AppProfileRouteImport } from './routes/_app.profile'
@@ -62,11 +61,6 @@ const AppDashboardRoute = AppDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AppRoute,
 } as any)
-const AppInterviewGeneratorRoute = AppInterviewGeneratorRouteImport.update({
-  id: '/interview-generator',
-  path: '/interview-generator',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppJdGeneratorRoute = AppJdGeneratorRouteImport.update({
   id: '/jd-generator',
   path: '/jd-generator',
@@ -96,7 +90,6 @@ export interface FileRoutesByFullPath {
   '/candidate-match': typeof AppCandidateMatchRoute
   '/candidates': typeof AppCandidatesRoute
   '/dashboard': typeof AppDashboardRoute
-  '/interview-generator': typeof AppInterviewGeneratorRoute
   '/jd-generator': typeof AppJdGeneratorRoute
   '/jobs': typeof AppJobsRoute
   '/profile': typeof AppProfileRoute
@@ -110,7 +103,6 @@ export interface FileRoutesByTo {
   '/candidate-match': typeof AppCandidateMatchRoute
   '/candidates': typeof AppCandidatesRoute
   '/dashboard': typeof AppDashboardRoute
-  '/interview-generator': typeof AppInterviewGeneratorRoute
   '/jd-generator': typeof AppJdGeneratorRoute
   '/jobs': typeof AppJobsRoute
   '/profile': typeof AppProfileRoute
@@ -126,7 +118,6 @@ export interface FileRoutesById {
   '/_app/candidate-match': typeof AppCandidateMatchRoute
   '/_app/candidates': typeof AppCandidatesRoute
   '/_app/dashboard': typeof AppDashboardRoute
-  '/_app/interview-generator': typeof AppInterviewGeneratorRoute
   '/_app/jd-generator': typeof AppJdGeneratorRoute
   '/_app/jobs': typeof AppJobsRoute
   '/_app/profile': typeof AppProfileRoute
@@ -142,7 +133,6 @@ export interface FileRouteTypes {
     | '/candidate-match'
     | '/candidates'
     | '/dashboard'
-    | '/interview-generator'
     | '/jd-generator'
     | '/jobs'
     | '/profile'
@@ -156,7 +146,6 @@ export interface FileRouteTypes {
     | '/candidate-match'
     | '/candidates'
     | '/dashboard'
-    | '/interview-generator'
     | '/jd-generator'
     | '/jobs'
     | '/profile'
@@ -171,7 +160,6 @@ export interface FileRouteTypes {
     | '/_app/candidate-match'
     | '/_app/candidates'
     | '/_app/dashboard'
-    | '/_app/interview-generator'
     | '/_app/jd-generator'
     | '/_app/jobs'
     | '/_app/profile'
@@ -244,13 +232,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDashboardRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/interview-generator': {
-      id: '/_app/interview-generator'
-      path: '/interview-generator'
-      fullPath: '/interview-generator'
-      preLoaderRoute: typeof AppInterviewGeneratorRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/jd-generator': {
       id: '/_app/jd-generator'
       path: '/jd-generator'
@@ -286,7 +267,6 @@ interface AppRouteChildren {
   AppCandidateMatchRoute: typeof AppCandidateMatchRoute
   AppCandidatesRoute: typeof AppCandidatesRoute
   AppDashboardRoute: typeof AppDashboardRoute
-  AppInterviewGeneratorRoute: typeof AppInterviewGeneratorRoute
   AppJdGeneratorRoute: typeof AppJdGeneratorRoute
   AppJobsRoute: typeof AppJobsRoute
   AppProfileRoute: typeof AppProfileRoute
@@ -297,7 +277,6 @@ const AppRouteChildren: AppRouteChildren = {
   AppCandidateMatchRoute: AppCandidateMatchRoute,
   AppCandidatesRoute: AppCandidatesRoute,
   AppDashboardRoute: AppDashboardRoute,
-  AppInterviewGeneratorRoute: AppInterviewGeneratorRoute,
   AppJdGeneratorRoute: AppJdGeneratorRoute,
   AppJobsRoute: AppJobsRoute,
   AppProfileRoute: AppProfileRoute,

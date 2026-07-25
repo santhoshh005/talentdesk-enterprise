@@ -6,7 +6,6 @@ import {
   FileText,
   Target,
   PenSquare,
-  MessageSquareText,
   User,
   ChevronDown,
   Sparkles,
@@ -46,7 +45,6 @@ const aiTools: NavItem[] = [
   { title: "Resume Analyzer", url: "/resume-analyzer", icon: FileText },
   { title: "Candidate Match", url: "/candidate-match", icon: Target },
   { title: "JD Generator", url: "/jd-generator", icon: PenSquare },
-  { title: "Interview Generator", url: "/interview-generator", icon: MessageSquareText },
 ];
 
 function NavGroup({ label, items, currentPath }: { label: string; items: NavItem[]; currentPath: string }) {

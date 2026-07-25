@@ -330,10 +330,6 @@ function JobsPage() {
                             <PenSquare className="size-4 text-primary" />
                             <span>Generate JD</span>
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => navigate({ to: "/interview-generator", search: { jobTitle: j.title } })} className="gap-2 cursor-pointer">
-                            <MessageSquareText className="size-4 text-primary" />
-                            <span>Interview Kit</span>
-                          </DropdownMenuItem>
                           
                           <DropdownMenuSeparator />
                           <DropdownMenuLabel className="text-[11px] text-muted-foreground font-normal">Change Status</DropdownMenuLabel>
