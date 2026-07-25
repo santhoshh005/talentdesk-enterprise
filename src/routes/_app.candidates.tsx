@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Plus, Download, MoreHorizontal, Search, User, ArrowRightLeft, FileText, Copy } from "lucide-react";
+import { Plus, Download, MoreHorizontal, Search, User, FileText, Copy, Trash2 } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,13 +15,10 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useState } from "react";
-import { useCandidates, useMoveStage } from "@/hooks/use-api";
+import { useCandidates } from "@/hooks/use-api";
 import { useDebounce } from "@/hooks/use-debounce";
 import { CreateCandidateDialog } from "@/components/create-candidate-dialog";
 import { CandidateDetailSheet } from "@/components/candidate-detail-sheet";
@@ -37,28 +34,16 @@ export const Route = createFileRoute("/_app/candidates")({
   component: CandidatesPage,
 });
 
-const stageColor: Record<string, string> = {
-  Applied: "bg-secondary text-secondary-foreground",
-  Screening: "bg-warning/10 text-warning",
-  Interview: "bg-primary/10 text-primary",
-  Offer: "bg-success/10 text-success",
-  Hired: "bg-success text-success-foreground"
-};
-
 function CandidatesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearch = useDebounce(searchTerm, 300);
-  const [stageFilter, setStageFilter] = useState("All stages");
   const [locFilter, setLocFilter] = useState("Any location");
   const [expFilter, setExpFilter] = useState("Any");
   const [isCreateCandidateOpen, setIsCreateCandidateOpen] = useState(false);
   const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(null);
 
-  const moveStageMutation = useMoveStage();
-
   const filters: Record<string, string> = {};
   if (debouncedSearch) filters.search = debouncedSearch;
-  if (stageFilter !== "All stages") filters.stage = stageFilter;
   if (locFilter !== "Any location") filters.location = locFilter;
   if (expFilter !== "Any") filters.experience = expFilter;
 
@@ -70,7 +55,7 @@ function CandidatesPage() {
       toast.error("No candidates available to export");
       return;
     }
-    const headers = ["Name", "Email", "Role", "Location", "Experience", "Stage", "Score", "Skills"];
+    const headers = ["Name", "Email", "Role", "Location", "Experience", "Score", "Skills"];
     const csvLines = [
       headers.join(","),
       ...rows.map((c: any) =>
@@ -80,7 +65,6 @@ function CandidatesPage() {
           `"${c.role || ''}"`,
           `"${c.loc || ''}"`,
           `"${c.exp || ''}"`,
-          `"${c.stage || ''}"`,
           `"${c.score || ''}"`,
           `"${(c.skills || []).join("; ")}"`
         ].join(",")
@@ -100,14 +84,6 @@ function CandidatesPage() {
     toast.success(`Exported ${rows.length} candidates to CSV`);
   }
 
-  const handleMoveStage = (candidateId: string, toStageName: string) => {
-    moveStageMutation.mutate({ candidateId, toStageName }, {
-      onSuccess: () => {
-        toast.success(`Moved candidate to ${toStageName}`);
-      }
-    });
-  };
-
   const copyEmail = (email: string) => {
     if (email) {
       navigator.clipboard.writeText(email);
@@ -119,7 +95,7 @@ function CandidatesPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Candidates"
-        description="A single view of every candidate across roles and pipelines."
+        description="A single view of every candidate across your organization."
         actions={
           <>
             <Button variant="outline" size="sm" className="gap-1.5" onClick={downloadCSV}>
@@ -141,17 +117,6 @@ function CandidatesPage() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <Select value={stageFilter} onValueChange={setStageFilter}>
-          <SelectTrigger className="w-[140px]"><SelectValue placeholder="Stage" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="All stages">All stages</SelectItem>
-            <SelectItem value="Applied">Applied</SelectItem>
-            <SelectItem value="Screening">Screening</SelectItem>
-            <SelectItem value="Interview">Interview</SelectItem>
-            <SelectItem value="Offer">Offer</SelectItem>
-            <SelectItem value="Hired">Hired</SelectItem>
-          </SelectContent>
-        </Select>
         <Select value={locFilter} onValueChange={setLocFilter}>
           <SelectTrigger className="w-[140px]"><SelectValue placeholder="Location" /></SelectTrigger>
           <SelectContent>
@@ -159,17 +124,15 @@ function CandidatesPage() {
             <SelectItem value="Remote">Remote</SelectItem>
             <SelectItem value="San Francisco">San Francisco</SelectItem>
             <SelectItem value="New York">New York</SelectItem>
-            <SelectItem value="London">London</SelectItem>
-            <SelectItem value="Berlin">Berlin</SelectItem>
           </SelectContent>
         </Select>
         <Select value={expFilter} onValueChange={setExpFilter}>
           <SelectTrigger className="w-[140px]"><SelectValue placeholder="Experience" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="Any">Any exp</SelectItem>
-            <SelectItem value="1-3">1-3 years</SelectItem>
-            <SelectItem value="3-5">3-5 years</SelectItem>
-            <SelectItem value="5+">5+ years</SelectItem>
+            <SelectItem value="Any">Any exp.</SelectItem>
+            <SelectItem value="0-2 yrs">0-2 yrs</SelectItem>
+            <SelectItem value="3-5 yrs">3-5 yrs</SelectItem>
+            <SelectItem value="5+ yrs">5+ yrs</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -180,12 +143,11 @@ function CandidatesPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Candidate</TableHead>
-                <TableHead>Role</TableHead>
+                <TableHead>Target Role</TableHead>
                 <TableHead>Location</TableHead>
                 <TableHead>Experience</TableHead>
+                <TableHead>Match Score</TableHead>
                 <TableHead>Skills</TableHead>
-                <TableHead>Stage</TableHead>
-                <TableHead className="text-right">AI Score</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -196,83 +158,64 @@ function CandidatesPage() {
                     <TableCell><Skeleton className="h-4 w-32" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-28" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-12" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-36" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                    <TableCell className="text-right"><Skeleton className="h-4 w-8 ml-auto" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-12" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
                     <TableCell className="text-right"><Skeleton className="h-4 w-6 ml-auto" /></TableCell>
                   </TableRow>
                 ))
               ) : rows.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
-                    No candidates found matching your filter criteria.
+                  <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
+                    No candidates found matching your filters.
                   </TableCell>
                 </TableRow>
               ) : (
                 rows.map((c: any) => (
-                  <TableRow key={c.id} className="cursor-pointer hover:bg-secondary/40" onClick={() => setSelectedCandidateId(c.id)}>
-                    <TableCell>
+                  <TableRow key={c.id} className="hover:bg-secondary/40">
+                    <TableCell className="font-medium cursor-pointer" onClick={() => setSelectedCandidateId(c.id)}>
                       <div className="flex items-center gap-2.5">
-                        <Avatar className="size-7">
-                          <AvatarFallback className="bg-secondary text-[10px] font-medium">
+                        <Avatar className="size-8">
+                          <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
                             {(c.name || 'C').split(" ").map((n: string) => n[0]).join("")}
                           </AvatarFallback>
                         </Avatar>
-                        <span className="text-sm font-medium">{c.name}</span>
+                        <div>
+                          <div className="font-semibold text-foreground">{c.name}</div>
+                          <div className="text-xs text-muted-foreground">{c.email}</div>
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">{c.role}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">{c.loc}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">{c.exp}</TableCell>
+                    <TableCell className="text-sm font-semibold tabular-nums text-foreground">{c.score}%</TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
                         {(c.skills || []).slice(0, 3).map((s: string) => (
-                          <Badge key={s} variant="outline" className="text-[10px]">{s}</Badge>
+                          <Badge key={s} variant="secondary" className="rounded-full px-2 py-0 text-[10px]">
+                            {s}
+                          </Badge>
                         ))}
-                        {(c.skills || []).length > 3 && (
-                          <Badge variant="outline" className="text-[10px]">+{c.skills.length - 3}</Badge>
-                        )}
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <Badge variant="secondary" className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${stageColor[c.stage] || ""}`}>
-                        {c.stage}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right text-sm font-semibold tabular-nums">{c.score}</TableCell>
-                    <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                    <TableCell className="text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="size-7">
+                          <Button variant="ghost" size="icon" className="size-8">
                             <MoreHorizontal className="size-4" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-48">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem onClick={() => setSelectedCandidateId(c.id)} className="gap-2">
-                            <User className="size-4" /> View Profile & Notes
+                          <DropdownMenuLabel>Candidate Actions</DropdownMenuLabel>
+                          <DropdownMenuItem onClick={() => setSelectedCandidateId(c.id)} className="gap-2 cursor-pointer">
+                            <User className="size-4 text-muted-foreground" />
+                            <span>View Profile</span>
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => copyEmail(c.email)} className="gap-2">
-                            <Copy className="size-4" /> Copy Email
+                          <DropdownMenuItem onClick={() => copyEmail(c.email)} className="gap-2 cursor-pointer">
+                            <Copy className="size-4 text-muted-foreground" />
+                            <span>Copy Email</span>
                           </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuSub>
-                            <DropdownMenuSubTrigger className="gap-2">
-                              <ArrowRightLeft className="size-4" /> Move Stage
-                            </DropdownMenuSubTrigger>
-                            <DropdownMenuSubContent className="w-36">
-                              {["Applied", "Screening", "Interview", "Offer", "Hired"].map((stage) => (
-                                <DropdownMenuItem 
-                                  key={stage} 
-                                  onClick={() => handleMoveStage(c.id, stage)}
-                                  disabled={c.stage === stage}
-                                >
-                                  {stage}
-                                </DropdownMenuItem>
-                              ))}
-                            </DropdownMenuSubContent>
-                          </DropdownMenuSub>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -285,11 +228,7 @@ function CandidatesPage() {
       </Card>
 
       <CreateCandidateDialog open={isCreateCandidateOpen} onOpenChange={setIsCreateCandidateOpen} />
-      <CandidateDetailSheet 
-        candidateId={selectedCandidateId} 
-        open={!!selectedCandidateId} 
-        onOpenChange={(open) => !open && setSelectedCandidateId(null)} 
-      />
+      <CandidateDetailSheet candidateId={selectedCandidateId} open={!!selectedCandidateId} onOpenChange={(v) => !v && setSelectedCandidateId(null)} />
     </div>
   );
 }

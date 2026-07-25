@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Plus, MoreHorizontal, Eye, Pencil, Trash2, CheckCircle2, PauseCircle, XCircle } from "lucide-react";
+import { Plus, MoreHorizontal, Eye, Pencil, Trash2, CheckCircle2, PauseCircle, XCircle, Target, PenSquare, MessageSquareText } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -249,7 +249,7 @@ function JobsPage() {
                             <MoreHorizontal className="size-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuContent align="end" className="w-52">
                           <DropdownMenuLabel>Job Actions</DropdownMenuLabel>
                           <DropdownMenuItem onClick={() => setViewingJob(j)} className="gap-2 cursor-pointer">
                             <Eye className="size-4 text-muted-foreground" />
@@ -258,6 +258,20 @@ function JobsPage() {
                           <DropdownMenuItem onClick={() => openEditModal(j)} className="gap-2 cursor-pointer">
                             <Pencil className="size-4 text-muted-foreground" />
                             <span>Edit Position</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuLabel className="text-[11px] text-primary font-semibold">AI Tools</DropdownMenuLabel>
+                          <DropdownMenuItem onClick={() => navigate({ to: "/candidate-match" })} className="gap-2 cursor-pointer">
+                            <Target className="size-4 text-primary" />
+                            <span>Match Candidates</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => navigate({ to: "/jd-generator" })} className="gap-2 cursor-pointer">
+                            <PenSquare className="size-4 text-primary" />
+                            <span>Generate JD</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => navigate({ to: "/interview-generator" })} className="gap-2 cursor-pointer">
+                            <MessageSquareText className="size-4 text-primary" />
+                            <span>Interview Kit</span>
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuLabel className="text-[11px] text-muted-foreground font-normal">Change Status</DropdownMenuLabel>
