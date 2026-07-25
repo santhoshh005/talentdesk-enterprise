@@ -13,17 +13,22 @@ export const Route = createFileRoute("/_app")({
 function AppLayoutWithGuard() {
   const { isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      const token = localStorage.getItem("accessToken");
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (isMounted && !isLoading && !isAuthenticated) {
+      const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
       if (!token) {
         navigate({ to: "/login" });
       }
     }
-  }, [isLoading, isAuthenticated, navigate]);
+  }, [isMounted, isLoading, isAuthenticated, navigate]);
 
-  if (isLoading) {
+  if (!isMounted || isLoading) {
     return (
       <div className="flex h-screen items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-3">
