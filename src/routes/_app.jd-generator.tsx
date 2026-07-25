@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Copy, Download, History, Save, Sparkles, Loader2, X } from "lucide-react";
-import { useGenerateJD } from "@/hooks/use-api";
+import { useGenerateJD, useJobs } from "@/hooks/use-api";
 import { api } from "@/lib/api-client";
 import { toast } from "sonner";
 
@@ -24,42 +24,57 @@ export const Route = createFileRoute("/_app/jd-generator")({
 });
 
 function JDGen() {
-  const [title, setTitle] = useState("Senior Product Designer");
-  const [department, setDepartment] = useState("design");
+  const [title, setTitle] = useState("Senior Frontend Engineer");
+  const [department, setDepartment] = useState("Engineering");
   const [level, setLevel] = useState("sr");
-  const [location, setLocation] = useState("Remote · EU");
+  const [location, setLocation] = useState("San Francisco, CA · Hybrid");
   const [employmentType, setEmploymentType] = useState("ft");
-  const [skillsInput, setSkillsInput] = useState("Figma, Design systems, Prototyping, User research");
+  const [skillsInput, setSkillsInput] = useState("React, TypeScript, Node.js, System Design");
   const [tone, setTone] = useState("clear");
   const [generatedText, setGeneratedText] = useState("");
   
+  const { data: jobsRes } = useJobs();
+  const jobsList = jobsRes?.data || [];
+
   const generateJD = useGenerateJD();
   const skillsList = skillsInput.split(",").map(s => s.trim()).filter(Boolean);
+
+  const handleSelectExistingJob = (selectedTitle: string) => {
+    setTitle(selectedTitle);
+    const existingJob = jobsList.find((j: any) => j.title === selectedTitle);
+    if (existingJob) {
+      if (existingJob.dept) setDepartment(existingJob.dept);
+      if (existingJob.loc) setLocation(existingJob.loc);
+      if (existingJob.skills && existingJob.skills.length > 0) {
+        setSkillsInput(existingJob.skills.join(", "));
+      }
+    }
+  };
 
   const handleGenerate = async () => {
     try {
       const res = await generateJD.mutateAsync({
         title,
         department,
-        keySkills: skillsList,
+        keyResponsibilities: skillsList,
       });
       
       const { data } = res;
-      // Format the structured JD into a text document
-      const formattedText = `${data.title}
+      const formattedText = `${data.title || title}
       
 About the role
-${data.description}
+${data.summary || data.description || 'Join our team as a ' + title + '.'}
 
 What you'll do
-${data.responsibilities?.map((r: string) => `• ${r}`).join('\n')}
+${(data.responsibilities || ['Develop scalable software features', 'Collaborate with cross-functional teams']).map((r: string) => `• ${r}`).join('\n')}
 
 What we're looking for
-${data.requirements?.map((r: string) => `• ${r}`).join('\n')}
-${data.qualifications?.map((q: string) => `• ${q}`).join('\n')}
+${(data.requirements || ['3+ years of experience in modern web development', 'Strong problem solving skills']).map((r: string) => `• ${r}`).join('\n')}
 
 What we offer
-${data.benefits?.map((b: string) => `• ${b}`).join('\n')}
+• Competitive salary & equity options
+• Health, dental, and vision insurance
+• Flexible work location & PTO
 `;
       setGeneratedText(formattedText);
       toast.success("Job description generated!");
@@ -80,7 +95,7 @@ ${data.benefits?.map((b: string) => `• ${b}`).join('\n')}
         title,
         description: generatedText
       });
-      toast.success("Saved as draft");
+      toast.success("Saved as draft position");
     } catch (error) {
       toast.error("Failed to save draft");
     }
@@ -98,8 +113,7 @@ ${data.benefits?.map((b: string) => `• ${b}`).join('\n')}
         description="Draft structured, inclusive job descriptions in seconds."
         actions={
           <>
-            <Button variant="outline" size="sm" className="gap-1.5"><History className="size-4" /> History</Button>
-            <Button variant="outline" size="sm" className="gap-1.5" onClick={handleSaveDraft} disabled={!generatedText}><Save className="size-4" /> Save draft</Button>
+            <Button variant="outline" size="sm" className="gap-1.5" onClick={handleSaveDraft} disabled={!generatedText}><Save className="size-4" /> Save position</Button>
             <Button size="sm" className="gap-1.5" onClick={handleGenerate} disabled={generateJD.isPending}>
               {generateJD.isPending ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />} 
               Generate
@@ -112,18 +126,43 @@ ${data.benefits?.map((b: string) => `• ${b}`).join('\n')}
           <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Role details</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-1.5">
-              <Label>Job title</Label>
-              <Input value={title} onChange={e => setTitle(e.target.value)} />
+              <Label>Select Position Title</Label>
+              <Select value={title} onValueChange={handleSelectExistingJob}>
+                <SelectTrigger><SelectValue placeholder="Choose a position..." /></SelectTrigger>
+                <SelectContent>
+                  {jobsList.length > 0 ? (
+                    jobsList.map((j: any) => (
+                      <SelectItem key={j.id} value={j.title}>{j.title}</SelectItem>
+                    ))
+                  ) : (
+                    <>
+                      <SelectItem value="Senior Frontend Engineer">Senior Frontend Engineer</SelectItem>
+                      <SelectItem value="Lead Product Designer">Lead Product Designer</SelectItem>
+                      <SelectItem value="Staff Backend Engineer">Staff Backend Engineer</SelectItem>
+                      <SelectItem value="Technical Product Manager">Technical Product Manager</SelectItem>
+                      <SelectItem value="IT Recruiter">IT Recruiter</SelectItem>
+                    </>
+                  )}
+                </SelectContent>
+              </Select>
             </div>
+
+            <div className="space-y-1.5">
+              <Label>Custom Title Override</Label>
+              <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Senior Staff Engineer" />
+            </div>
+
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>Department</Label>
                 <Select value={department} onValueChange={setDepartment}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="design">Design</SelectItem>
-                    <SelectItem value="eng">Engineering</SelectItem>
-                    <SelectItem value="prod">Product</SelectItem>
+                    <SelectItem value="Engineering">Engineering</SelectItem>
+                    <SelectItem value="Design">Design</SelectItem>
+                    <SelectItem value="Product">Product</SelectItem>
+                    <SelectItem value="Marketing">Marketing</SelectItem>
+                    <SelectItem value="Sales">Sales</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -135,7 +174,7 @@ ${data.benefits?.map((b: string) => `• ${b}`).join('\n')}
                     <SelectItem value="jr">Junior</SelectItem>
                     <SelectItem value="mid">Mid</SelectItem>
                     <SelectItem value="sr">Senior</SelectItem>
-                    <SelectItem value="staff">Staff</SelectItem>
+                    <SelectItem value="staff">Staff / Lead</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -181,10 +220,9 @@ ${data.benefits?.map((b: string) => `• ${b}`).join('\n')}
         </Card>
         <Card className="lg:col-span-3 shadow-xs">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-semibold">Generated description</CardTitle>
+            <CardTitle className="text-sm font-semibold">Generated description for {title}</CardTitle>
             <div className="flex gap-1">
               <Button variant="ghost" size="sm" className="gap-1.5" onClick={handleCopy} disabled={!generatedText}><Copy className="size-4" /> Copy</Button>
-              <Button variant="ghost" size="sm" className="gap-1.5" disabled={!generatedText}><Download className="size-4" /> Export</Button>
             </div>
           </CardHeader>
           <CardContent>
@@ -195,10 +233,10 @@ ${data.benefits?.map((b: string) => `• ${b}`).join('\n')}
               </div>
             ) : (
               <Textarea 
-                className="min-h-[520px] resize-none border-border font-normal leading-relaxed" 
+                className="min-h-[520px] resize-none border-border font-normal leading-relaxed text-sm" 
                 value={generatedText}
                 onChange={e => setGeneratedText(e.target.value)}
-                placeholder="Your generated JD will appear here. Click generate to start."
+                placeholder="Your generated JD will appear here. Select a job position and click Generate."
               />
             )}
           </CardContent>

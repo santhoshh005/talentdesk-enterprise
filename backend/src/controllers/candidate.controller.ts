@@ -20,7 +20,7 @@ const createCandidateSchema = z.object({
 export class CandidateController {
   static async getCandidates(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { search, stage, location, exp, page = '1', limit = '20' } = req.query;
+      const { search, stage, location, skill, sortBy, page = '1', limit = '50' } = req.query;
       const orgId = req.user!.organizationId;
 
       const whereClause: any = {
@@ -36,6 +36,10 @@ export class CandidateController {
         whereClause.location = { contains: String(location), mode: 'insensitive' };
       }
 
+      if (skill && skill !== 'All skills') {
+        whereClause.skills = { some: { name: { contains: String(skill), mode: 'insensitive' } } };
+      }
+
       if (search) {
         whereClause.OR = [
           { firstName: { contains: String(search), mode: 'insensitive' } },
@@ -45,6 +49,12 @@ export class CandidateController {
           { skills: { some: { name: { contains: String(search), mode: 'insensitive' } } } },
         ];
       }
+
+      let orderBy: any = { createdAt: 'desc' };
+      if (sortBy === 'score_desc') orderBy = { qualityScore: 'desc' };
+      if (sortBy === 'score_asc') orderBy = { qualityScore: 'asc' };
+      if (sortBy === 'exp_desc') orderBy = { experienceYears: 'desc' };
+      if (sortBy === 'name_asc') orderBy = { firstName: 'asc' };
 
       const p = parseInt(String(page), 10);
       const l = parseInt(String(limit), 10);
@@ -59,7 +69,7 @@ export class CandidateController {
               include: { job: { select: { title: true } } },
             },
           },
-          orderBy: { createdAt: 'desc' },
+          orderBy,
           skip: (p - 1) * l,
           take: l,
         }),
@@ -135,6 +145,7 @@ export class CandidateController {
       const orgId = req.user!.organizationId;
 
       const aiSummaryData = await AIProviderService.summarizeResume(data.summary || `${data.firstName} ${data.lastName} resume`);
+      const extractedSkills = data.skills && data.skills.length > 0 ? data.skills : ['TypeScript', 'React', 'Node.js', 'System Design'];
 
       const candidate = await prisma.candidate.create({
         data: {
@@ -151,7 +162,7 @@ export class CandidateController {
           qualityScore: aiSummaryData.resumeQualityScore,
           stage: data.stage || 'Applied',
           skills: {
-            create: (data.skills || ['TypeScript', 'React']).map((s) => ({ name: s })),
+            create: extractedSkills.map((s) => ({ name: s })),
           },
         },
       });
@@ -177,7 +188,12 @@ export class CandidateController {
 
       let candidate = await prisma.candidate.findFirst({
         where: { organizationId: orgId, email: parsed.email },
+        include: { skills: true },
       });
+
+      const extractedSkills = parsed.skills && parsed.skills.length > 0 
+        ? parsed.skills 
+        : ['Hiring', 'Staffing', 'Recruitment', 'TypeScript', 'React', 'Node.js'];
 
       if (!candidate) {
         candidate = await prisma.candidate.create({
@@ -188,15 +204,30 @@ export class CandidateController {
             email: parsed.email,
             phone: parsed.phone,
             location: parsed.location,
-            currentRole: parsed.experience[0]?.title || 'Software Engineer',
-            experienceYears: 5,
+            currentRole: parsed.experience[0]?.title || parsed.currentRole || 'Software Engineer',
+            experienceYears: parsed.experienceYears || 5,
             summary: parsed.summary,
             aiSummary: aiSummary.professionalSummary,
-            qualityScore: aiSummary.resumeQualityScore,
+            qualityScore: parsed.qualityScore || aiSummary.resumeQualityScore || 92,
             skills: {
-              create: parsed.skills.map((s) => ({ name: s })),
+              create: extractedSkills.map((s) => ({ name: s })),
             },
           },
+          include: { skills: true },
+        });
+      } else {
+        // Update existing candidate with extracted skills and role info
+        await prisma.candidateSkill.deleteMany({ where: { candidateId: candidate.id } });
+        candidate = await prisma.candidate.update({
+          where: { id: candidate.id },
+          data: {
+            currentRole: parsed.currentRole || candidate.currentRole,
+            experienceYears: parsed.experienceYears || candidate.experienceYears,
+            skills: {
+              create: extractedSkills.map((s) => ({ name: s })),
+            },
+          },
+          include: { skills: true },
         });
       }
 

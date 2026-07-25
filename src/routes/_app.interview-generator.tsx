@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Download, Pencil, Sparkles, Loader2, Copy } from "lucide-react";
-import { useGenerateInterviewKit } from "@/hooks/use-api";
+import { useGenerateInterviewKit, useJobs } from "@/hooks/use-api";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/interview-generator")({
@@ -25,11 +25,14 @@ export const Route = createFileRoute("/_app/interview-generator")({
 type Question = { question: string, purpose?: string, followUp?: string };
 
 function InterviewGen() {
-  const [role, setRole] = useState("Senior Product Designer");
+  const [role, setRole] = useState("Senior Frontend Engineer");
   const [seniority, setSeniority] = useState("sr");
   const [difficulty, setDifficulty] = useState("hard");
   const [duration, setDuration] = useState("45");
   
+  const { data: jobsRes } = useJobs();
+  const jobsList = jobsRes?.data || [];
+
   const generateKit = useGenerateInterviewKit();
   const kitData = generateKit.data?.data;
 
@@ -79,7 +82,6 @@ function InterviewGen() {
         actions={
           <>
             {kitData && <Button variant="outline" size="sm" className="gap-1.5" onClick={copyAll}><Copy className="size-4" /> Copy all</Button>}
-            <Button variant="outline" size="sm" className="gap-1.5"><Download className="size-4" /> Export PDF</Button>
             <Button size="sm" className="gap-1.5" onClick={handleGenerate} disabled={generateKit.isPending}>
               {generateKit.isPending ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />} 
               {kitData ? "Regenerate" : "Generate kit"}
@@ -90,8 +92,25 @@ function InterviewGen() {
       <Card className="shadow-xs">
         <CardContent className="grid grid-cols-1 gap-4 p-5 md:grid-cols-4">
           <div className="space-y-1.5">
-            <Label>Role</Label>
-            <Input value={role} onChange={e => setRole(e.target.value)} />
+            <Label>Target Position / Role</Label>
+            <Select value={role} onValueChange={setRole}>
+              <SelectTrigger><SelectValue placeholder="Select position title..." /></SelectTrigger>
+              <SelectContent>
+                {jobsList.length > 0 ? (
+                  jobsList.map((j: any) => (
+                    <SelectItem key={j.id} value={j.title}>{j.title}</SelectItem>
+                  ))
+                ) : (
+                  <>
+                    <SelectItem value="Senior Frontend Engineer">Senior Frontend Engineer</SelectItem>
+                    <SelectItem value="Lead Product Designer">Lead Product Designer</SelectItem>
+                    <SelectItem value="Staff Backend Engineer">Staff Backend Engineer</SelectItem>
+                    <SelectItem value="Technical Product Manager">Technical Product Manager</SelectItem>
+                    <SelectItem value="IT Recruiter">IT Recruiter</SelectItem>
+                  </>
+                )}
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-1.5">
             <Label>Seniority</Label>
@@ -101,7 +120,7 @@ function InterviewGen() {
                 <SelectItem value="jr">Junior</SelectItem>
                 <SelectItem value="mid">Mid</SelectItem>
                 <SelectItem value="sr">Senior</SelectItem>
-                <SelectItem value="staff">Staff</SelectItem>
+                <SelectItem value="staff">Staff / Lead</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -131,12 +150,12 @@ function InterviewGen() {
       </Card>
       
       <Card className="shadow-xs min-h-[400px]">
-        <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Question bank</CardTitle></CardHeader>
+        <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Question bank for {role}</CardTitle></CardHeader>
         <CardContent>
           {generateKit.isPending ? (
             <div className="flex flex-col items-center justify-center py-20">
               <Loader2 className="size-8 text-primary animate-spin mb-4" />
-              <p className="text-sm text-muted-foreground">Generating questions...</p>
+              <p className="text-sm text-muted-foreground">Generating interview kit for {role}...</p>
             </div>
           ) : kitData ? (
             <Tabs defaultValue="behavioral">
@@ -172,7 +191,7 @@ function InterviewGen() {
           ) : (
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <Sparkles className="size-8 text-muted-foreground mb-4 opacity-50" />
-              <p className="text-sm text-muted-foreground">Click generate to create an interview kit</p>
+              <p className="text-sm text-muted-foreground">Click generate to create an interview kit for <span className="font-semibold text-foreground">{role}</span></p>
             </div>
           )}
         </CardContent>

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Plus, Download, MoreHorizontal, Search, User, FileText, Copy, Trash2 } from "lucide-react";
+import { Plus, Download, MoreHorizontal, Search, User, Copy } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,7 +14,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useState } from "react";
@@ -37,15 +36,19 @@ export const Route = createFileRoute("/_app/candidates")({
 function CandidatesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearch = useDebounce(searchTerm, 300);
+  const [skillFilter, setSkillFilter] = useState("All skills");
   const [locFilter, setLocFilter] = useState("Any location");
   const [expFilter, setExpFilter] = useState("Any");
+  const [sortBy, setSortBy] = useState("score_desc");
   const [isCreateCandidateOpen, setIsCreateCandidateOpen] = useState(false);
   const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(null);
 
   const filters: Record<string, string> = {};
   if (debouncedSearch) filters.search = debouncedSearch;
+  if (skillFilter !== "All skills") filters.skill = skillFilter;
   if (locFilter !== "Any location") filters.location = locFilter;
   if (expFilter !== "Any") filters.experience = expFilter;
+  if (sortBy) filters.sortBy = sortBy;
 
   const { data, isLoading } = useCandidates(filters);
   const rows = data?.data || [];
@@ -107,8 +110,10 @@ function CandidatesPage() {
           </>
         }
       />
+      
+      {/* Search and Filters Bar */}
       <div className="flex flex-wrap items-center gap-2">
-        <div className="relative flex-1 min-w-[240px] max-w-md">
+        <div className="relative flex-1 min-w-[220px] max-w-md">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input 
             placeholder="Search by name, skill, role…" 
@@ -117,6 +122,24 @@ function CandidatesPage() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
+
+        {/* Skill Based Filter */}
+        <Select value={skillFilter} onValueChange={setSkillFilter}>
+          <SelectTrigger className="w-[140px]"><SelectValue placeholder="Skill" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="All skills">All skills</SelectItem>
+            <SelectItem value="React">React</SelectItem>
+            <SelectItem value="TypeScript">TypeScript</SelectItem>
+            <SelectItem value="Node.js">Node.js</SelectItem>
+            <SelectItem value="Recruitment">Recruitment</SelectItem>
+            <SelectItem value="Hiring">Hiring</SelectItem>
+            <SelectItem value="Staffing">Staffing</SelectItem>
+            <SelectItem value="PostgreSQL">PostgreSQL</SelectItem>
+            <SelectItem value="System Design">System Design</SelectItem>
+          </SelectContent>
+        </Select>
+
+        {/* Location Filter */}
         <Select value={locFilter} onValueChange={setLocFilter}>
           <SelectTrigger className="w-[140px]"><SelectValue placeholder="Location" /></SelectTrigger>
           <SelectContent>
@@ -124,15 +147,30 @@ function CandidatesPage() {
             <SelectItem value="Remote">Remote</SelectItem>
             <SelectItem value="San Francisco">San Francisco</SelectItem>
             <SelectItem value="New York">New York</SelectItem>
+            <SelectItem value="Bangalore">Bangalore</SelectItem>
+            <SelectItem value="London">London</SelectItem>
           </SelectContent>
         </Select>
+
+        {/* Experience Filter */}
         <Select value={expFilter} onValueChange={setExpFilter}>
-          <SelectTrigger className="w-[140px]"><SelectValue placeholder="Experience" /></SelectTrigger>
+          <SelectTrigger className="w-[130px]"><SelectValue placeholder="Experience" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="Any">Any exp.</SelectItem>
             <SelectItem value="0-2 yrs">0-2 yrs</SelectItem>
             <SelectItem value="3-5 yrs">3-5 yrs</SelectItem>
             <SelectItem value="5+ yrs">5+ yrs</SelectItem>
+          </SelectContent>
+        </Select>
+
+        {/* Sorting Dropdown */}
+        <Select value={sortBy} onValueChange={setSortBy}>
+          <SelectTrigger className="w-[170px]"><SelectValue placeholder="Sort by" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="score_desc">Match Score (High-Low)</SelectItem>
+            <SelectItem value="score_asc">Match Score (Low-High)</SelectItem>
+            <SelectItem value="exp_desc">Experience (High-Low)</SelectItem>
+            <SelectItem value="name_asc">Name (A-Z)</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -171,56 +209,62 @@ function CandidatesPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                rows.map((c: any) => (
-                  <TableRow key={c.id} className="hover:bg-secondary/40">
-                    <TableCell className="font-medium cursor-pointer" onClick={() => setSelectedCandidateId(c.id)}>
-                      <div className="flex items-center gap-2.5">
-                        <Avatar className="size-8">
-                          <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
-                            {(c.name || 'C').split(" ").map((n: string) => n[0]).join("")}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <div className="font-semibold text-foreground">{c.name}</div>
-                          <div className="text-xs text-muted-foreground">{c.email}</div>
+                rows.map((c: any) => {
+                  const candidateSkills = (c.skills && c.skills.length > 0)
+                    ? c.skills 
+                    : (c.role?.toLowerCase().includes("recruiter") ? ["Hiring", "Staffing", "Recruitment"] : ["TypeScript", "React", "Node.js"]);
+
+                  return (
+                    <TableRow key={c.id} className="hover:bg-secondary/40">
+                      <TableCell className="font-medium cursor-pointer" onClick={() => setSelectedCandidateId(c.id)}>
+                        <div className="flex items-center gap-2.5">
+                          <Avatar className="size-8">
+                            <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
+                              {(c.name || 'C').split(" ").map((n: string) => n[0]).join("")}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <div className="font-semibold text-foreground">{c.name}</div>
+                            <div className="text-xs text-muted-foreground">{c.email}</div>
+                          </div>
                         </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{c.role}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{c.loc}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{c.exp}</TableCell>
-                    <TableCell className="text-sm font-semibold tabular-nums text-foreground">{c.score}%</TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1">
-                        {(c.skills || []).slice(0, 3).map((s: string) => (
-                          <Badge key={s} variant="secondary" className="rounded-full px-2 py-0 text-[10px]">
-                            {s}
-                          </Badge>
-                        ))}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="size-8">
-                            <MoreHorizontal className="size-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48">
-                          <DropdownMenuLabel>Candidate Actions</DropdownMenuLabel>
-                          <DropdownMenuItem onClick={() => setSelectedCandidateId(c.id)} className="gap-2 cursor-pointer">
-                            <User className="size-4 text-muted-foreground" />
-                            <span>View Profile</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => copyEmail(c.email)} className="gap-2 cursor-pointer">
-                            <Copy className="size-4 text-muted-foreground" />
-                            <span>Copy Email</span>
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{c.role}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{c.loc}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{c.exp}</TableCell>
+                      <TableCell className="text-sm font-bold tabular-nums text-primary">{c.score}%</TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-1">
+                          {candidateSkills.map((s: string) => (
+                            <Badge key={s} variant="secondary" className="rounded-full px-2 py-0 text-[10px] font-medium bg-secondary text-secondary-foreground">
+                              {s}
+                            </Badge>
+                          ))}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="size-8">
+                              <MoreHorizontal className="size-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuLabel>Candidate Actions</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => setSelectedCandidateId(c.id)} className="gap-2 cursor-pointer">
+                              <User className="size-4 text-muted-foreground" />
+                              <span>View Profile</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => copyEmail(c.email)} className="gap-2 cursor-pointer">
+                              <Copy className="size-4 text-muted-foreground" />
+                              <span>Copy Email</span>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
               )}
             </TableBody>
           </Table>

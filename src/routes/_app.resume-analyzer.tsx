@@ -7,8 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
-import { useUploadResume, useSummarizeResume } from "@/hooks/use-api";
+import { useUploadResume, useSummarizeResume, useJobs } from "@/hooks/use-api";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/resume-analyzer")({
@@ -23,9 +22,12 @@ export const Route = createFileRoute("/_app/resume-analyzer")({
 
 function ResumeAnalyzer() {
   const [dragging, setDragging] = useState(false);
-  const [jobType, setJobType] = useState("pd");
+  const [jobType, setJobType] = useState("Senior Frontend Engineer");
   const [fileData, setFileData] = useState<{name: string, size: string} | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { data: jobsRes } = useJobs();
+  const jobsList = jobsRes?.data || [];
 
   const uploadResume = useUploadResume();
   const summarizeResume = useSummarizeResume();
@@ -74,7 +76,7 @@ function ResumeAnalyzer() {
     const reportText = `TALENTOS AI RESUME ANALYSIS REPORT
 ====================================
 Candidate Name: ${candidate?.firstName || parsedData?.firstName || "Candidate"} ${candidate?.lastName || parsedData?.lastName || ""}
-Job Position: ${jobType === "pd" ? "Senior Product Designer" : jobType === "be" ? "Staff Backend Engineer" : "PM, Growth"}
+Job Position: ${jobType}
 Overall Quality Score: ${analyzedData.resumeQualityScore || 92}/100
 
 AI Summary & Executive Recommendation:
@@ -107,7 +109,7 @@ Skills Audit:
     <div className="flex flex-col gap-6">
       <PageHeader 
         title="Resume Analyzer" 
-        description="Score a resume against any job description with AI-assisted analysis." 
+        description="Score a resume against any job position with AI-assisted analysis." 
         actions={
           analyzedData && (
             <Button variant="outline" size="sm" className="gap-1.5" onClick={downloadAnalysisReport}>
@@ -119,14 +121,24 @@ Skills Audit:
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
         <div className="lg:col-span-2 flex flex-col gap-4">
           <Card className="shadow-xs">
-            <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Job description</CardTitle></CardHeader>
+            <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Target Job Position</CardTitle></CardHeader>
             <CardContent>
               <Select value={jobType} onValueChange={setJobType}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Select position title..." /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="pd">Senior Product Designer</SelectItem>
-                  <SelectItem value="be">Staff Backend Engineer</SelectItem>
-                  <SelectItem value="pm">PM, Growth</SelectItem>
+                  {jobsList.length > 0 ? (
+                    jobsList.map((j: any) => (
+                      <SelectItem key={j.id} value={j.title}>{j.title} ({j.dept})</SelectItem>
+                    ))
+                  ) : (
+                    <>
+                      <SelectItem value="Senior Frontend Engineer">Senior Frontend Engineer</SelectItem>
+                      <SelectItem value="Lead Product Designer">Lead Product Designer</SelectItem>
+                      <SelectItem value="Staff Backend Engineer">Staff Backend Engineer</SelectItem>
+                      <SelectItem value="Technical Product Manager">Technical Product Manager</SelectItem>
+                      <SelectItem value="IT Recruiter">IT Recruiter</SelectItem>
+                    </>
+                  )}
                 </SelectContent>
               </Select>
             </CardContent>
@@ -178,7 +190,7 @@ Skills Audit:
                   <div>
                     <CardTitle className="text-sm font-semibold">Overall AI match score</CardTitle>
                     <p className="mt-0.5 text-xs text-muted-foreground">
-                      Candidate: {candidate?.firstName || parsedData?.firstName || "Uploaded Resume"} {candidate?.lastName || parsedData?.lastName || ""}
+                      Candidate: {candidate?.firstName || parsedData?.firstName || "Uploaded Resume"} {candidate?.lastName || parsedData?.lastName || ""} · Position: {jobType}
                     </p>
                   </div>
                   <div className="flex items-baseline gap-1">
@@ -231,7 +243,7 @@ Skills Audit:
                   <div className="flex items-start gap-2.5 rounded-md border border-primary/20 bg-primary/5 p-4">
                     <Sparkles className="mt-0.5 size-4 shrink-0 text-primary" />
                     <div>
-                      <div className="text-sm font-semibold text-foreground">Summary & Hiring Recommendation</div>
+                      <div className="text-sm font-semibold text-foreground">Summary & Hiring Recommendation for {jobType}</div>
                       <p className="text-xs text-foreground/90 mt-1 leading-relaxed">{analyzedData.professionalSummary || analyzedData.experienceSummary}</p>
                     </div>
                   </div>
@@ -243,7 +255,7 @@ Skills Audit:
               <Sparkles className="size-8 text-muted-foreground mb-4 opacity-50" />
               <h3 className="text-lg font-medium">No resume analyzed yet</h3>
               <p className="text-sm text-muted-foreground max-w-sm mt-1">
-                Upload a candidate's resume on the left to see their AI match score, matched skills, and professional summary against the selected job description.
+                Upload a candidate's resume on the left to see their AI match score, matched skills, and professional summary against <span className="font-semibold text-foreground">{jobType}</span>.
               </p>
             </div>
           )}
