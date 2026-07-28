@@ -7,7 +7,6 @@ import {
   Target,
   PenSquare,
   User,
-  ChevronDown,
   Sparkles,
 } from "lucide-react";
 
@@ -23,14 +22,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/use-auth";
 
 type NavItem = { title: string; url: string; icon: React.ComponentType<{ className?: string }> };
@@ -87,26 +78,15 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
       <SidebarHeader className="border-b border-sidebar-border px-3 py-3">
-        <DropdownMenu>
-          <DropdownMenuTrigger className="group flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left hover:bg-sidebar-accent transition-colors">
-            <div className="grid size-8 shrink-0 place-items-center rounded-md bg-primary text-primary-foreground">
-              <Sparkles className="size-4" strokeWidth={2.25} />
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-sm font-semibold text-sidebar-foreground">TalentOS</div>
-              <div className="truncate text-[11px] text-muted-foreground">{orgName}</div>
-            </div>
-            <ChevronDown className="size-3.5 text-muted-foreground" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-56">
-            <DropdownMenuLabel>Workspaces</DropdownMenuLabel>
-            <DropdownMenuItem>{orgName}</DropdownMenuItem>
-            <DropdownMenuItem>Northwind Talent</DropdownMenuItem>
-            <DropdownMenuItem>Globex HR</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>Create workspace</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left">
+          <div className="grid size-8 shrink-0 place-items-center rounded-md bg-primary text-primary-foreground shadow-xs">
+            <Sparkles className="size-4" strokeWidth={2.25} />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="truncate text-sm font-bold text-sidebar-foreground tracking-tight">TalentOS</div>
+            <div className="truncate text-[11px] text-muted-foreground font-medium">{orgName}</div>
+          </div>
+        </div>
       </SidebarHeader>
 
       <SidebarContent className="gap-0.5 px-1.5">
