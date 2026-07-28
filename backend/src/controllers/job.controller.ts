@@ -166,7 +166,6 @@ export class JobController {
           status: 'PUBLISHED',
           pipelineStages: {
             create: (data.stages || ['Sourced', 'Screening', 'Interview', 'Offer', 'Hired']).map((name, index) => ({
-              organizationId: orgId,
               name,
               order: index + 1,
               type: (name.toUpperCase().includes('SCREEN')
@@ -177,7 +176,7 @@ export class JobController {
                 ? 'OFFER'
                 : name.toUpperCase().includes('HIRE')
                 ? 'HIRED'
-                : 'SOURCED') as ApplicationStageType,
+                : 'APPLIED') as ApplicationStageType,
             })),
           },
         },
@@ -194,11 +193,20 @@ export class JobController {
       const id = String(req.params.id);
       const { title, status, description, type, workplaceType } = req.body;
 
+      let validStatus: any = status;
+      if (status === 'PAUSED' || status === 'PAUSE') {
+        validStatus = 'DRAFT';
+      } else if (status === 'PUBLISH' || status === 'PUBLISHED') {
+        validStatus = 'PUBLISHED';
+      } else if (status === 'CLOSE' || status === 'CLOSED') {
+        validStatus = 'CLOSED';
+      }
+
       const updated = await prisma.job.update({
         where: { id },
         data: {
           ...(title && { title }),
-          ...(status && { status: status as JobStatus }),
+          ...(validStatus && { status: validStatus as JobStatus }),
           ...(description && { description }),
           ...(type && { type }),
           ...(workplaceType && { workplaceType }),

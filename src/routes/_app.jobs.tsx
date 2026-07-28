@@ -302,8 +302,8 @@ function JobsPage() {
                       {j.candidatesCount || j.applicants || 0}
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className={`rounded-full font-medium ${statusColor[j.status] || ""}`}>
-                        {j.status}
+                      <Badge variant="outline" className={`rounded-full font-medium ${statusColor[j.status] || "bg-muted text-muted-foreground"}`}>
+                        {j.status === "DRAFT" ? "PAUSED" : j.status}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">

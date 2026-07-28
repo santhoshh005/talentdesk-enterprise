@@ -66,19 +66,33 @@ function JDGen() {
   };
 
   const handleGenerate = async () => {
-    if (!title) {
-      toast.error("Please select or enter a position title first!");
+    // Form Validation
+    if (!title.trim()) {
+      toast.error("Please enter or select a position title.");
       return;
     }
+    if (!location.trim()) {
+      toast.error("Please enter a job location.");
+      return;
+    }
+    if (!roleSummary.trim()) {
+      toast.error("Please provide a brief role description / overview.");
+      return;
+    }
+    if (!skillsInput.trim()) {
+      toast.error("Please enter at least one must-have skill.");
+      return;
+    }
+
     try {
       const res = await generateJD.mutateAsync({
-        title,
+        title: title.trim(),
         department,
         level,
-        location,
+        location: location.trim(),
         employmentType,
         experienceRequired,
-        overviewSummary: roleSummary,
+        overviewSummary: roleSummary.trim(),
         keyResponsibilities: skillsList,
         tone,
       });
@@ -163,7 +177,7 @@ Job Details & Benefits
           <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">1. Position Details & Requirements</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-1.5">
-              <Label>Select Position</Label>
+              <Label>Select Position <span className="text-destructive">*</span></Label>
               <Select value={title} onValueChange={handleSelectExistingJob}>
                 <SelectTrigger className="font-semibold"><SelectValue placeholder="Choose a position title..." /></SelectTrigger>
                 <SelectContent>
@@ -185,8 +199,8 @@ Job Details & Benefits
             </div>
 
             <div className="space-y-1.5">
-              <Label>Or Enter Custom Position Title</Label>
-              <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Staff Backend Engineer" />
+              <Label>Or Enter Custom Position Title <span className="text-destructive">*</span></Label>
+              <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Staff Backend Engineer" required />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -220,8 +234,8 @@ Job Details & Benefits
             </div>
 
             <div className="space-y-1.5">
-              <Label>Location</Label>
-              <Input value={location} onChange={e => setLocation(e.target.value)} placeholder="e.g. New York, USA or Remote" />
+              <Label>Location <span className="text-destructive">*</span></Label>
+              <Input value={location} onChange={e => setLocation(e.target.value)} placeholder="e.g. New York, USA or Remote" required />
             </div>
 
             <div className="space-y-1.5">
@@ -237,31 +251,42 @@ Job Details & Benefits
               </Select>
             </div>
 
-            {/* Experience Required Section */}
+            {/* Experience Required Dropdown Selector */}
             <div className="space-y-1.5">
-              <Label className="font-semibold text-foreground">Required Experience</Label>
-              <Input 
-                value={experienceRequired} 
-                onChange={e => setExperienceRequired(e.target.value)} 
-                placeholder="e.g. 5+ years of distributed backend engineering" 
-              />
+              <Label className="font-semibold text-foreground">Required Experience <span className="text-destructive">*</span></Label>
+              <Select value={experienceRequired} onValueChange={setExperienceRequired}>
+                <SelectTrigger><SelectValue placeholder="Select years of experience..." /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1+ years">1+ years</SelectItem>
+                  <SelectItem value="2+ years">2+ years</SelectItem>
+                  <SelectItem value="3+ years">3+ years</SelectItem>
+                  <SelectItem value="4+ years">4+ years</SelectItem>
+                  <SelectItem value="5+ years">5+ years</SelectItem>
+                  <SelectItem value="6+ years">6+ years</SelectItem>
+                  <SelectItem value="7+ years">7+ years</SelectItem>
+                  <SelectItem value="8+ years">8+ years</SelectItem>
+                  <SelectItem value="10+ years">10+ years</SelectItem>
+                  <SelectItem value="12+ years">12+ years</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Role Overview & Description Section */}
             <div className="space-y-1.5">
-              <Label className="font-semibold text-foreground">Role Description / Overview</Label>
+              <Label className="font-semibold text-foreground">Role Description / Overview <span className="text-destructive">*</span></Label>
               <Textarea 
                 rows={3} 
                 value={roleSummary} 
                 onChange={e => setRoleSummary(e.target.value)} 
                 placeholder="Brief summary of project goals, team culture, or core expectations for this role..." 
                 className="resize-none text-xs"
+                required
               />
             </div>
 
             <div className="space-y-1.5">
-              <Label>Must-have skills</Label>
-              <Input value={skillsInput} onChange={e => setSkillsInput(e.target.value)} placeholder="Go, Node.js, Kafka, AWS" />
+              <Label>Must-have skills <span className="text-destructive">*</span></Label>
+              <Input value={skillsInput} onChange={e => setSkillsInput(e.target.value)} placeholder="Go, Node.js, Kafka, AWS" required />
               <div className="flex flex-wrap gap-1.5 mt-2">
                 {skillsList.map((s, i) => (
                   <Badge key={i} variant="secondary" className="rounded-full flex items-center gap-1 cursor-pointer" onClick={() => removeSkill(s)}>
@@ -310,7 +335,7 @@ Job Details & Benefits
                 className="min-h-[580px] resize-none border-border font-normal leading-relaxed text-sm" 
                 value={generatedText}
                 onChange={e => setGeneratedText(e.target.value)}
-                placeholder={`Job description for ${title} will appear here. Click Generate JD to start.`}
+                placeholder={`Job description for ${title} will appear here. Fill required fields and click Generate JD.`}
               />
             )}
           </CardContent>

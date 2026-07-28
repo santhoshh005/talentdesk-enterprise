@@ -156,6 +156,35 @@ export class CandidateController {
 
       const extractedSkills = data.skills && data.skills.length > 0 ? data.skills : ['TypeScript', 'React', 'Node.js', 'System Design'];
 
+      const existingCandidate = await prisma.candidate.findFirst({
+        where: {
+          organizationId: orgId,
+          email: { equals: data.email, mode: 'insensitive' },
+        },
+      });
+
+      if (existingCandidate) {
+        const updatedCandidate = await prisma.candidate.update({
+          where: { id: existingCandidate.id },
+          data: {
+            isDeleted: false,
+            firstName: data.firstName || existingCandidate.firstName,
+            lastName: data.lastName || existingCandidate.lastName,
+            phone: data.phone || existingCandidate.phone,
+            location: data.location || existingCandidate.location,
+            currentRole: data.currentRole || existingCandidate.currentRole,
+            experienceYears: data.experienceYears !== undefined ? data.experienceYears : existingCandidate.experienceYears,
+            summary: data.summary || existingCandidate.summary,
+            aiSummary: aiSummaryData?.professionalSummary || existingCandidate.aiSummary,
+            qualityScore: aiSummaryData?.resumeQualityScore || existingCandidate.qualityScore || 90,
+          },
+          include: { skills: true },
+        });
+
+        res.status(200).json({ success: true, data: updatedCandidate, message: 'Candidate details updated successfully' });
+        return;
+      }
+
       const candidate = await prisma.candidate.create({
         data: {
           organizationId: orgId,
