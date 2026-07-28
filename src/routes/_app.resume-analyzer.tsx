@@ -273,17 +273,9 @@ Skills Audit against Position Requirements:
                       </SelectItem>
                     ))
                   ) : (
-                    <>
-                      <SelectItem value="Senior Frontend Engineer">
-                        Senior Frontend Engineer
-                      </SelectItem>
-                      <SelectItem value="Lead Product Designer">Lead Product Designer</SelectItem>
-                      <SelectItem value="Staff Backend Engineer">Staff Backend Engineer</SelectItem>
-                      <SelectItem value="Technical Product Manager">
-                        Technical Product Manager
-                      </SelectItem>
-                      <SelectItem value="IT Recruiter">IT Recruiter</SelectItem>
-                    </>
+                    <SelectItem value="none" disabled>
+                      {jobsRes ? "No jobs available" : "Loading jobs..."}
+                    </SelectItem>
                   )}
                 </SelectContent>
               </Select>

@@ -74,6 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         sessionStorage.removeItem("accessToken");
         localStorage.removeItem("user");
         sessionStorage.removeItem("user");
+        setUser(null);
       })
       .finally(() => setIsLoading(false));
   }, []);
