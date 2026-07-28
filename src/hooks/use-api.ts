@@ -61,8 +61,7 @@ export function useDashboardMetrics() {
   return useQuery({
     queryKey: queryKeys.dashboard,
     queryFn: () => api.getDashboardStats(),
-    placeholderData: defaultDashboardData,
-    staleTime: 30_000,
+    staleTime: 0,
   });
 }
 
@@ -71,8 +70,7 @@ export function useCandidates(filters?: Record<string, string>) {
   return useQuery({
     queryKey: queryKeys.candidates(filters),
     queryFn: () => api.getCandidates(filters),
-    placeholderData: defaultCandidatesData,
-    staleTime: 15_000,
+    staleTime: 0,
   });
 }
 
@@ -94,6 +92,32 @@ export function useCreateCandidate() {
       toast.success("Candidate added successfully");
     },
     onError: (err: Error) => toast.error(err.message || "Failed to add candidate"),
+  });
+}
+
+export function useUpdateCandidate() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => api.updateCandidate(id, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["candidates"] });
+      qc.invalidateQueries({ queryKey: queryKeys.dashboard });
+      toast.success("Candidate details updated successfully");
+    },
+    onError: (err: Error) => toast.error(err.message || "Failed to update candidate"),
+  });
+}
+
+export function useDeleteCandidate() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.deleteCandidate(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["candidates"] });
+      qc.invalidateQueries({ queryKey: queryKeys.dashboard });
+      toast.success("Candidate deleted successfully");
+    },
+    onError: (err: Error) => toast.error(err.message || "Failed to delete candidate"),
   });
 }
 
@@ -121,8 +145,7 @@ export function useJobs(filters?: Record<string, string>) {
   return useQuery({
     queryKey: queryKeys.jobs(filters),
     queryFn: () => api.getJobs(filters),
-    placeholderData: defaultJobsData,
-    staleTime: 15_000,
+    staleTime: 0,
   });
 }
 
@@ -150,11 +173,25 @@ export function useCreateJob() {
 export function useUpdateJob() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: any }) => api.patch(`/jobs/${id}`, data),
+    mutationFn: ({ id, data }: { id: string; data: any }) => api.updateJob(id, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["jobs"] });
       qc.invalidateQueries({ queryKey: queryKeys.dashboard });
     },
+    onError: (err: Error) => toast.error(err.message || "Failed to update job status"),
+  });
+}
+
+export function useDeleteJob() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.deleteJob(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["jobs"] });
+      qc.invalidateQueries({ queryKey: queryKeys.dashboard });
+      toast.success("Position deleted successfully");
+    },
+    onError: (err: Error) => toast.error(err.message || "Failed to delete position"),
   });
 }
 
@@ -191,7 +228,17 @@ export function useParseResume() {
 
 export function useGenerateJD() {
   return useMutation({
-    mutationFn: (data: { title: string; department?: string; keyResponsibilities?: string[] }) => api.generateJd(data),
+    mutationFn: (data: {
+      title: string;
+      department?: string;
+      level?: string;
+      location?: string;
+      employmentType?: string;
+      keyResponsibilities?: string[];
+      overviewSummary?: string;
+      experienceRequired?: string;
+      tone?: string;
+    }) => api.generateJd(data),
     onError: (err: Error) => toast.error(err.message || "Failed to generate job description"),
   });
 }

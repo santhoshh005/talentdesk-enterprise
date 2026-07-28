@@ -161,3 +161,13 @@
     letter-spacing: -0.015em;
   }
 }
+
+/* Hide duplicate native browser password reveal buttons in Edge / Chrome */
+input::-ms-reveal,
+input::-ms-clear,
+input::-webkit-contacts-auto-fill-button,
+input::-webkit-credentials-auto-fill-button {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}

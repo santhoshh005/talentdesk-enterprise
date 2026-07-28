@@ -26,12 +26,18 @@ export class AIController {
 
   static async generateJD(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { title, department, keyResponsibilities } = req.body;
+      const { title, department, level, location, employmentType, keyResponsibilities, overviewSummary, experienceRequired, tone } = req.body;
       const orgId = req.user?.organizationId;
       const result = await AIProviderService.generateJD({
         title: title || 'Senior Software Engineer',
         department,
-        keyResponsibilities: Array.isArray(keyResponsibilities) ? keyResponsibilities : [],
+        level,
+        location,
+        employmentType,
+        keyResponsibilities: Array.isArray(keyResponsibilities) ? keyResponsibilities : (keyResponsibilities ? String(keyResponsibilities).split(',') : []),
+        overviewSummary,
+        experienceRequired,
+        tone,
       }, orgId);
       res.json({ success: true, data: result });
     } catch (err) {

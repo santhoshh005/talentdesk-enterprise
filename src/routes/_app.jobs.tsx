@@ -20,7 +20,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useState } from "react";
-import { useJobs, useUpdateJob } from "@/hooks/use-api";
+import { useJobs, useUpdateJob, useDeleteJob } from "@/hooks/use-api";
 import { api } from "@/lib/api-client";
 import { useDebounce } from "@/hooks/use-debounce";
 import { CreateJobDialog } from "@/components/create-job-dialog";
@@ -67,6 +67,7 @@ function JobsPage() {
 
   const { data: jobsData, isLoading, refetch } = useJobs(filters);
   const updateJobMutation = useUpdateJob();
+  const deleteJobMutation = useDeleteJob();
   
   const rawJobs = jobsData?.data || [];
   const seenTitles = new Set<string>();
@@ -98,11 +99,9 @@ function JobsPage() {
       });
       toast.success(`Updated job "${editTitle}"`);
       setEditingJob(null);
-      refetch();
+      await refetch();
     } catch (err) {
-      toast.success(`Updated job "${editTitle}"`);
-      setEditingJob(null);
-      refetch();
+      toast.error("Failed to update job position");
     }
   };
 
@@ -113,22 +112,20 @@ function JobsPage() {
         data: { status: newStatus },
       });
       toast.success(`Job status set to ${newStatus}`);
-      refetch();
+      await refetch();
     } catch (err) {
-      toast.success(`Job status set to ${newStatus}`);
-      refetch();
+      toast.error("Failed to update job status");
     }
   };
 
   const handleDeleteJob = async (jobId: string, title: string) => {
     if (!confirm(`Are you sure you want to delete position "${title}"?`)) return;
     try {
-      await api.deleteJob(jobId);
+      await deleteJobMutation.mutateAsync(jobId);
       toast.success(`Deleted position "${title}"`);
-      refetch();
+      await refetch();
     } catch (err) {
-      toast.success(`Deleted position "${title}"`);
-      refetch();
+      toast.error("Failed to delete position");
     }
   };
 

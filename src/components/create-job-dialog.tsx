@@ -11,7 +11,7 @@ import { toast } from "sonner";
 export function CreateJobDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const [title, setTitle] = useState("");
   const [department, setDepartment] = useState("");
-  const [type, setType] = useState("");
+  const [type, setType] = useState("Full-time");
   const [location, setLocation] = useState("");
   const [description, setDescription] = useState("");
   const [minSalary, setMinSalary] = useState("");
@@ -22,38 +22,35 @@ export function CreateJobDialog({ open, onOpenChange }: { open: boolean; onOpenC
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title || !description) {
+    if (!title.trim() || !description.trim()) {
       toast.error("Title and description are required.");
       return;
     }
 
     try {
       await createJob.mutateAsync({
-        title,
-        department,
-        type,
-        location,
-        description,
-        salary: {
-          min: minSalary ? Number(minSalary) : undefined,
-          max: maxSalary ? Number(maxSalary) : undefined,
-        },
+        title: title.trim(),
+        type: type || "Full-time",
+        location: location.trim() || "Remote",
+        description: description.trim(),
+        minSalary: minSalary ? Number(minSalary) : undefined,
+        maxSalary: maxSalary ? Number(maxSalary) : undefined,
         skills: skills ? skills.split(",").map((s) => s.trim()).filter(Boolean) : [],
       });
-      toast.success("Job created successfully.");
+      toast.success(`Job position "${title}" created successfully.`);
       onOpenChange(false);
       
       // Reset form
       setTitle("");
       setDepartment("");
-      setType("");
+      setType("Full-time");
       setLocation("");
       setDescription("");
       setMinSalary("");
       setMaxSalary("");
       setSkills("");
-    } catch (error) {
-      toast.error("Failed to create job.");
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to create job.");
     }
   };
 
@@ -110,11 +107,11 @@ export function CreateJobDialog({ open, onOpenChange }: { open: boolean; onOpenC
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="minSalary">Min Salary</Label>
+              <Label htmlFor="minSalary">Min Salary ($)</Label>
               <Input id="minSalary" type="number" value={minSalary} onChange={(e) => setMinSalary(e.target.value)} placeholder="e.g. 100000" />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="maxSalary">Max Salary</Label>
+              <Label htmlFor="maxSalary">Max Salary ($)</Label>
               <Input id="maxSalary" type="number" value={maxSalary} onChange={(e) => setMaxSalary(e.target.value)} placeholder="e.g. 150000" />
             </div>
           </div>

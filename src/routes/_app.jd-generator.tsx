@@ -8,9 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Copy, Save, Sparkles, Loader2, X, AlertCircle } from "lucide-react";
+import { Copy, Sparkles, Loader2, X, AlertCircle } from "lucide-react";
 import { useGenerateJD, useJobs } from "@/hooks/use-api";
-import { api } from "@/lib/api-client";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/jd-generator")({
@@ -30,11 +29,13 @@ function JDGen() {
   const { jobTitle: searchJobTitle } = Route.useSearch();
   const [title, setTitle] = useState(searchJobTitle || "");
   const [department, setDepartment] = useState("Engineering");
-  const [level, setLevel] = useState("sr");
-  const [location, setLocation] = useState("San Francisco, CA · Hybrid");
-  const [employmentType, setEmploymentType] = useState("ft");
-  const [skillsInput, setSkillsInput] = useState("React, TypeScript, Node.js, System Design");
-  const [tone, setTone] = useState("clear");
+  const [level, setLevel] = useState("Senior");
+  const [location, setLocation] = useState("New York, USA");
+  const [employmentType, setEmploymentType] = useState("Full-time");
+  const [experienceRequired, setExperienceRequired] = useState("5+ years");
+  const [roleSummary, setRoleSummary] = useState("");
+  const [skillsInput, setSkillsInput] = useState("Go, Node.js, Kafka, AWS");
+  const [tone, setTone] = useState("Clear & professional");
   const [generatedText, setGeneratedText] = useState("");
 
   const { data: jobsRes } = useJobs();
@@ -58,8 +59,8 @@ function JDGen() {
       if (existingJob.skills && existingJob.skills.length > 0) {
         setSkillsInput(existingJob.skills.join(", "));
       }
-      if (existingJob.description && existingJob.description.length > 30) {
-        setGeneratedText(existingJob.description);
+      if (existingJob.description && existingJob.description.length > 20) {
+        setRoleSummary(existingJob.description);
       }
     }
   };
@@ -73,28 +74,53 @@ function JDGen() {
       const res = await generateJD.mutateAsync({
         title,
         department,
+        level,
+        location,
+        employmentType,
+        experienceRequired,
+        overviewSummary: roleSummary,
         keyResponsibilities: skillsList,
+        tone,
       });
       
       const { data } = res;
-      const formattedText = `${data.title || title}
+      const respList = (data.responsibilities || [])
+        .map((r: string) => `• ${r}`)
+        .join('\n');
+      const reqList = (data.requirements || [])
+        .map((r: string) => `• ${r}`)
+        .join('\n');
+      const prefList = (data.preferredQualifications || [])
+        .map((r: string) => `• ${r}`)
+        .join('\n');
       
+      const formattedText = `${data.title || title}
+
 About the role
-${data.summary || data.description || 'Join our team as a ' + title + '.'}
+${roleSummary ? roleSummary + '\n\n' : ''}${data.summary || `We are seeking a ${title} to drive the technical vision, architecture, and execution of our ${department} team. In this role, you will lead complex technical initiatives, mentor senior engineers, and collaborate closely with cross-functional leadership.`}
 
 What you'll do
-${(data.responsibilities || ['Develop scalable software features', 'Collaborate with cross-functional teams']).map((r: string) => `• ${r}`).join('\n')}
+${respList || `• Architect, build, and maintain highly scalable backend services using ${skillsInput}.\n• Drive engineering best practices, architectural guidelines, and security standards.\n• Collaborate with product and design teams to deliver high-impact features.`}
 
 What we're looking for
-${(data.requirements || ['3+ years of experience in modern web development', 'Strong problem solving skills']).map((r: string) => `• ${r}`).join('\n')}
+• ${experienceRequired ? experienceRequired : '5+ years'} of professional software engineering experience with a strong focus on ${department} systems.
+• Deep technical expertise in ${skillsInput}.
+${reqList}
 
-What we offer
-• Competitive salary & equity options
-• Health, dental, and vision insurance
-• Flexible work location & PTO
+Preferred Qualifications
+${prefList || `• Proven track record of operating high-throughput cloud infrastructure (AWS/GCP).\n• Experience mentoring engineers and leading technical architecture discussions.`}
+
+Job Details & Benefits
+• Department: ${department}
+• Seniority Level: ${level}
+• Location: ${location}
+• Employment Type: ${employmentType}
+• Suggested Salary Range: $${data.suggestedSalaryRange?.min ? (data.suggestedSalaryRange.min / 1000).toFixed(0) + 'k' : '140k'} – $${data.suggestedSalaryRange?.max ? (data.suggestedSalaryRange.max / 1000).toFixed(0) + 'k' : '190k'} & Equity Options
+• Comprehensive medical, dental, and vision insurance with flexible PTO
 `;
+
       setGeneratedText(formattedText);
-      toast.success(`Job description generated for "${title}"!`);
+      toast.success(`Generated job description for "${title}"!`);
     } catch (error) {
       toast.error("Failed to generate JD");
     }
@@ -103,19 +129,6 @@ What we offer
   const handleCopy = () => {
     navigator.clipboard.writeText(generatedText);
     toast.success("Copied to clipboard");
-  };
-
-  const handleSaveDraft = async () => {
-    if (!generatedText) return;
-    try {
-      await api.createJob({
-        title,
-        description: generatedText
-      });
-      toast.success(`Saved position "${title}" to workspace`);
-    } catch (error) {
-      toast.error("Failed to save draft");
-    }
   };
 
   const removeSkill = (skillToRemove: string) => {
@@ -129,13 +142,10 @@ What we offer
         title="JD Generator"
         description={title ? `Drafting job description for position: ${title}` : "Select a position title first to generate its job description."}
         actions={
-          <>
-            <Button variant="outline" size="sm" className="gap-1.5" onClick={handleSaveDraft} disabled={!generatedText}><Save className="size-4" /> Save position</Button>
-            <Button size="sm" className="gap-1.5" onClick={handleGenerate} disabled={!title || generateJD.isPending}>
-              {generateJD.isPending ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />} 
-              Generate JD
-            </Button>
-          </>
+          <Button size="sm" className="gap-1.5" onClick={handleGenerate} disabled={!title || generateJD.isPending}>
+            {generateJD.isPending ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />} 
+            Generate JD
+          </Button>
         }
       />
 
@@ -150,7 +160,7 @@ What we offer
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
         <Card className="lg:col-span-2 shadow-xs h-fit border-primary/30">
-          <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">1. Select Target Position Title</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">1. Position Details & Requirements</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-1.5">
               <Label>Select Position</Label>
@@ -163,9 +173,9 @@ What we offer
                     ))
                   ) : (
                     <>
-                      <SelectItem value="Senior Frontend Engineer">Senior Frontend Engineer</SelectItem>
-                      <SelectItem value="Lead Product Designer">Lead Product Designer</SelectItem>
                       <SelectItem value="Staff Backend Engineer">Staff Backend Engineer</SelectItem>
+                      <SelectItem value="Senior Product Designer">Senior Product Designer</SelectItem>
+                      <SelectItem value="Senior Frontend Engineer">Senior Frontend Engineer</SelectItem>
                       <SelectItem value="Technical Product Manager">Technical Product Manager</SelectItem>
                       <SelectItem value="IT Recruiter">IT Recruiter</SelectItem>
                     </>
@@ -176,7 +186,7 @@ What we offer
 
             <div className="space-y-1.5">
               <Label>Or Enter Custom Position Title</Label>
-              <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Senior Staff Engineer" />
+              <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Staff Backend Engineer" />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -190,6 +200,7 @@ What we offer
                     <SelectItem value="Product">Product</SelectItem>
                     <SelectItem value="Marketing">Marketing</SelectItem>
                     <SelectItem value="Sales">Sales</SelectItem>
+                    <SelectItem value="General">General</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -198,32 +209,59 @@ What we offer
                 <Select value={level} onValueChange={setLevel}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="jr">Junior</SelectItem>
-                    <SelectItem value="mid">Mid</SelectItem>
-                    <SelectItem value="sr">Senior</SelectItem>
-                    <SelectItem value="staff">Staff / Lead</SelectItem>
+                    <SelectItem value="Junior">Junior</SelectItem>
+                    <SelectItem value="Mid">Mid</SelectItem>
+                    <SelectItem value="Senior">Senior</SelectItem>
+                    <SelectItem value="Staff / Lead">Staff / Lead</SelectItem>
+                    <SelectItem value="Director">Director / Principal</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
+
             <div className="space-y-1.5">
               <Label>Location</Label>
-              <Input value={location} onChange={e => setLocation(e.target.value)} />
+              <Input value={location} onChange={e => setLocation(e.target.value)} placeholder="e.g. New York, USA or Remote" />
             </div>
+
             <div className="space-y-1.5">
               <Label>Employment type</Label>
               <Select value={employmentType} onValueChange={setEmploymentType}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ft">Full-time</SelectItem>
-                  <SelectItem value="pt">Part-time</SelectItem>
-                  <SelectItem value="contract">Contract</SelectItem>
+                  <SelectItem value="Full-time">Full-time</SelectItem>
+                  <SelectItem value="Part-time">Part-time</SelectItem>
+                  <SelectItem value="Contract">Contract</SelectItem>
+                  <SelectItem value="Internship">Internship</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Experience Required Section */}
+            <div className="space-y-1.5">
+              <Label className="font-semibold text-foreground">Required Experience</Label>
+              <Input 
+                value={experienceRequired} 
+                onChange={e => setExperienceRequired(e.target.value)} 
+                placeholder="e.g. 5+ years of distributed backend engineering" 
+              />
+            </div>
+
+            {/* Role Overview & Description Section */}
+            <div className="space-y-1.5">
+              <Label className="font-semibold text-foreground">Role Description / Overview</Label>
+              <Textarea 
+                rows={3} 
+                value={roleSummary} 
+                onChange={e => setRoleSummary(e.target.value)} 
+                placeholder="Brief summary of project goals, team culture, or core expectations for this role..." 
+                className="resize-none text-xs"
+              />
+            </div>
+
             <div className="space-y-1.5">
               <Label>Must-have skills</Label>
-              <Input value={skillsInput} onChange={e => setSkillsInput(e.target.value)} placeholder="React, Node.js, etc" />
+              <Input value={skillsInput} onChange={e => setSkillsInput(e.target.value)} placeholder="Go, Node.js, Kafka, AWS" />
               <div className="flex flex-wrap gap-1.5 mt-2">
                 {skillsList.map((s, i) => (
                   <Badge key={i} variant="secondary" className="rounded-full flex items-center gap-1 cursor-pointer" onClick={() => removeSkill(s)}>
@@ -232,14 +270,16 @@ What we offer
                 ))}
               </div>
             </div>
+
             <div className="space-y-1.5">
               <Label>Tone</Label>
               <Select value={tone} onValueChange={setTone}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="clear">Clear & professional</SelectItem>
-                  <SelectItem value="friendly">Warm & inclusive</SelectItem>
-                  <SelectItem value="concise">Concise</SelectItem>
+                  <SelectItem value="Clear & professional">Clear & professional</SelectItem>
+                  <SelectItem value="Executive & formal">Executive & formal</SelectItem>
+                  <SelectItem value="Warm & inclusive">Warm & inclusive</SelectItem>
+                  <SelectItem value="Direct & high-impact">Direct & high-impact</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -255,19 +295,19 @@ What we offer
           </CardHeader>
           <CardContent>
             {!title ? (
-              <div className="flex flex-col items-center justify-center min-h-[520px] bg-secondary/10 rounded-md border border-dashed text-center p-6">
+              <div className="flex flex-col items-center justify-center min-h-[580px] bg-secondary/10 rounded-md border border-dashed text-center p-6">
                 <AlertCircle className="size-8 text-warning mb-3" />
                 <h4 className="text-base font-semibold">Select Position Title First</h4>
-                <p className="text-xs text-muted-foreground max-w-xs mt-1">Please select or enter a target position title on the left, then click Generate JD.</p>
+                <p className="text-xs text-muted-foreground max-w-xs mt-1">Please select or enter a target position title on the left, fill out the experience and description details, then click Generate JD.</p>
               </div>
             ) : generateJD.isPending ? (
-              <div className="flex flex-col items-center justify-center min-h-[520px] bg-secondary/10 rounded-md border border-dashed">
+              <div className="flex flex-col items-center justify-center min-h-[580px] bg-secondary/10 rounded-md border border-dashed">
                 <Loader2 className="size-8 text-primary animate-spin mb-4" />
-                <p className="text-sm text-muted-foreground">Drafting description for {title}...</p>
+                <p className="text-sm text-muted-foreground">Drafting comprehensive description for {title}...</p>
               </div>
             ) : (
               <Textarea 
-                className="min-h-[520px] resize-none border-border font-normal leading-relaxed text-sm" 
+                className="min-h-[580px] resize-none border-border font-normal leading-relaxed text-sm" 
                 value={generatedText}
                 onChange={e => setGeneratedText(e.target.value)}
                 placeholder={`Job description for ${title} will appear here. Click Generate JD to start.`}

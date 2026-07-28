@@ -65,6 +65,7 @@ export const api = {
     return apiFetch('/candidates/upload-resume', { method: 'POST', body: formData });
   },
   deleteCandidate: (id: string) => apiFetch(`/candidates/${id}`, { method: 'DELETE' }),
+  updateCandidate: (id: string, data: any) => apiFetch(`/candidates/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
 
   // Jobs
   getJobs: (params?: Record<string, string>) => {
@@ -90,12 +91,26 @@ export const api = {
     formData.append('file', file);
     return apiFetch('/ai/parse-resume', { method: 'POST', body: formData });
   },
-  generateJd: (data: { title: string; department?: string; keyResponsibilities?: string[] }) =>
-    apiFetch('/ai/generate-jd', { method: 'POST', body: JSON.stringify(data) }),
+  generateJd: (data: {
+    title: string;
+    department?: string;
+    level?: string;
+    location?: string;
+    employmentType?: string;
+    keyResponsibilities?: string[];
+    overviewSummary?: string;
+    experienceRequired?: string;
+    tone?: string;
+  }) => apiFetch('/ai/generate-jd', { method: 'POST', body: JSON.stringify(data) }),
   matchCandidates: (jobId: string) => apiFetch(`/ai/match-candidates/${jobId}`),
+
+  // Analytics
+  getDashboardStats: () => apiFetch('/analytics/dashboard'),
 
   // AI Configuration
   getAIConfig: () => apiFetch('/ai-config'),
   updateAIConfig: (data: { apiKey: string; provider?: string }) =>
     apiFetch('/ai-config', { method: 'POST', body: JSON.stringify(data) }),
+  addNote: (applicationId: string, content: string) =>
+    apiFetch(`/applications/${applicationId}/notes`, { method: 'POST', body: JSON.stringify({ content }) }),
 };

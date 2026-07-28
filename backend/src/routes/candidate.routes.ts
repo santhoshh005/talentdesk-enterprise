@@ -12,6 +12,7 @@ router.get('/', CandidateController.getCandidates);
 router.post('/', CandidateController.createCandidate);
 router.post('/upload-resume', upload.single('file'), CandidateController.uploadResume);
 router.get('/:id', CandidateController.getCandidateById);
+router.patch('/:id', CandidateController.updateCandidate);
 router.delete('/:id', CandidateController.deleteCandidate);
 
 export default router;

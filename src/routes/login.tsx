@@ -26,6 +26,7 @@ function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [keepSignedIn, setKeepSignedIn] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -33,7 +34,7 @@ function LoginPage() {
     setLoading(true);
     setError(null);
     try {
-      await login(email, password);
+      await login(email, password, keepSignedIn);
       navigate({ to: "/dashboard" });
     } catch (err: any) {
       setError(err.message || "Invalid credentials.");
@@ -67,7 +68,7 @@ function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
               autoComplete="current-password"
-              className="pr-10"
+              className="pr-10 font-sans"
             />
             <button
               type="button"
@@ -80,8 +81,12 @@ function LoginPage() {
             </button>
           </div>
         </div>
-        <label className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Checkbox /> Keep me signed in
+        <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
+          <Checkbox 
+            checked={keepSignedIn} 
+            onCheckedChange={(checked) => setKeepSignedIn(Boolean(checked))} 
+          /> 
+          Keep me signed in
         </label>
         <Button type="submit" className="w-full" disabled={loading}>{loading ? "Signing in…" : "Sign in"}</Button>
         <div className="relative py-1">

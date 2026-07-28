@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useDashboardMetrics, useCandidates, useJobs } from "@/hooks/use-api";
+import { useCandidates, useJobs } from "@/hooks/use-api";
 import { CreateJobDialog } from "@/components/create-job-dialog";
 import { CreateCandidateDialog } from "@/components/create-candidate-dialog";
 import { useState } from "react";
@@ -24,19 +24,17 @@ export const Route = createFileRoute("/_app/dashboard")({
 
 function Dashboard() {
   const navigate = useNavigate();
-  const { data: metricsData } = useDashboardMetrics();
   const { data: candidatesData, isLoading: candidatesLoading } = useCandidates({});
-  const { data: jobsData } = useJobs();
+  const { data: jobsData, isLoading: jobsLoading } = useJobs();
   
   const [isCreateJobOpen, setIsCreateJobOpen] = useState(false);
   const [isCreateCandidateOpen, setIsCreateCandidateOpen] = useState(false);
 
-  const kpis = metricsData?.data?.kpis;
   const candidateRows = candidatesData?.data || [];
   const jobsList = jobsData?.data || [];
 
-  const totalOpenJobs = jobsList.length || kpis?.activeJobs || 4;
-  const totalCandidatesCount = candidateRows.length || kpis?.totalCandidates || 8;
+  const totalOpenJobs = jobsList.length;
+  const totalCandidatesCount = candidateRows.length;
 
   function downloadCSV() {
     const lines = [
@@ -93,7 +91,9 @@ function Dashboard() {
           <CardContent className="p-5 flex items-center justify-between">
             <div>
               <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Open Jobs</div>
-              <div className="mt-1 text-3xl font-extrabold text-foreground">{totalOpenJobs}</div>
+              <div className="mt-1 text-3xl font-extrabold text-foreground">
+                {jobsLoading ? <Skeleton className="h-8 w-16 my-1" /> : totalOpenJobs}
+              </div>
               <div className="mt-1.5 flex items-center gap-1 text-xs text-primary font-medium group-hover:underline">
                 <Plus className="size-3.5" /> Click to add position
               </div>
@@ -116,7 +116,9 @@ function Dashboard() {
           <CardContent className="p-5 flex items-center justify-between">
             <div>
               <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Candidates</div>
-              <div className="mt-1 text-3xl font-extrabold text-foreground">{totalCandidatesCount}</div>
+              <div className="mt-1 text-3xl font-extrabold text-foreground">
+                {candidatesLoading ? <Skeleton className="h-8 w-16 my-1" /> : totalCandidatesCount}
+              </div>
               <div className="mt-1.5 flex items-center gap-1 text-xs text-success font-medium group-hover:underline">
                 <Plus className="size-3.5" /> Click to add candidate
               </div>
@@ -153,30 +155,40 @@ function Dashboard() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {candidatesLoading ? Array.from({ length: 4 }).map((_, i) => (
-                  <TableRow key={i}>
-                    <TableCell><Skeleton className="h-4 w-28" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                    <TableCell className="text-right"><Skeleton className="h-4 w-8 ml-auto" /></TableCell>
-                  </TableRow>
-                )) : candidateRows.slice(0, 5).map((c: any) => (
-                  <TableRow key={c.id} className="cursor-pointer hover:bg-secondary/40" onClick={() => navigate({ to: "/candidates" })}>
-                    <TableCell>
-                      <div className="flex items-center gap-2.5">
-                        <Avatar className="size-7">
-                          <AvatarFallback className="bg-secondary text-[10px] font-medium">
-                            {(c.name || 'C').split(" ").map((n: string) => n[0]).join("")}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="text-sm font-medium">{c.name}</span>
-                      </div>
+                {candidatesLoading ? (
+                  Array.from({ length: 4 }).map((_, i) => (
+                    <TableRow key={i}>
+                      <TableCell><Skeleton className="h-4 w-28" /></TableCell>
+                      <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                      <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                      <TableCell className="text-right"><Skeleton className="h-4 w-8 ml-auto" /></TableCell>
+                    </TableRow>
+                  ))
+                ) : candidateRows.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="py-8 text-center text-muted-foreground">
+                      No candidates in database yet. Click "Add candidate" above to add one.
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{c.role}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{c.loc}</TableCell>
-                    <TableCell className="text-right text-sm font-semibold tabular-nums">{c.score}%</TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  candidateRows.slice(0, 6).map((c: any) => (
+                    <TableRow key={c.id} className="cursor-pointer hover:bg-secondary/40" onClick={() => navigate({ to: "/candidates" })}>
+                      <TableCell>
+                        <div className="flex items-center gap-2.5">
+                          <Avatar className="size-7">
+                            <AvatarFallback className="bg-secondary text-[10px] font-medium">
+                              {(c.name || 'C').split(" ").map((n: string) => n[0]).join("")}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="text-sm font-medium">{c.name}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{c.role}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{c.loc}</TableCell>
+                      <TableCell className="text-right text-sm font-semibold tabular-nums">{c.score}%</TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </CardContent>

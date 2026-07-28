@@ -196,49 +196,69 @@ Return ONLY valid JSON:
     return this.callGeminiJson<CandidateMatchResult>(prompt, fallback, orgId);
   }
 
-  static async generateJD(params: { title: string; department?: string; keyResponsibilities?: string[] }, orgId?: string): Promise<GeneratedJobDescription> {
+  static async generateJD(params: {
+    title: string;
+    department?: string;
+    level?: string;
+    location?: string;
+    employmentType?: string;
+    keyResponsibilities?: string[];
+    overviewSummary?: string;
+    experienceRequired?: string;
+    tone?: string;
+  }, orgId?: string): Promise<GeneratedJobDescription> {
+    const skillsText = (params.keyResponsibilities || []).filter(Boolean).join(', ');
     const prompt = `
-You are an expert HR Copywriter. Generate a complete job description for the position: ${params.title}.
+You are an expert Executive Recruiter and HR Copywriter.
+Generate a comprehensive, highly detailed, professional Job Description for the following position:
+
+Position Title: ${params.title}
+Department: ${params.department || 'General'}
+Seniority Level: ${params.level || 'Senior'}
+Location: ${params.location || 'Remote'}
+Employment Type: ${params.employmentType || 'Full-time'}
+Required Experience: ${params.experienceRequired || '3+ years'}
+Role Overview / Context: ${params.overviewSummary || `We are seeking an exceptional ${params.title} to join our growing team.`}
+Must-Have Skills / Keywords: ${skillsText || 'Core domain skills'}
+Desired Tone: ${params.tone || 'Clear & professional'}
 
 Respond ONLY with valid JSON:
 {
   "title": "${params.title}",
-  "summary": "Join our team as a ${params.title} to build scalable solutions.",
+  "summary": "string (Detailed executive role overview incorporating the provided role context and requirements)",
   "responsibilities": [
-    "Design and develop production software features",
-    "Collaborate with product managers and engineers",
-    "Ensure high performance, accessibility, and quality"
+    "string (4-6 specific key responsibilities tailored to ${params.title} and skills ${skillsText})"
   ],
   "requirements": [
-    "3+ years of software development experience",
-    "Strong proficiency in modern frameworks and databases",
-    "Excellent communication and problem solving skills"
+    "string (4-6 core requirements specifically incorporating experience level ${params.experienceRequired || '3+ years'} and skills ${skillsText})"
   ],
   "preferredQualifications": [
-    "Bachelor's degree in Computer Science or related field",
-    "Experience with cloud infrastructure and CI/CD"
+    "string (2-3 preferred nice-to-have qualifications)"
   ],
-  "suggestedSalaryRange": { "min": 120000, "max": 160000 }
+  "suggestedSalaryRange": { "min": 140000, "max": 190000 }
 }
 `;
 
     const fallback: GeneratedJobDescription = {
       title: params.title,
-      summary: `Join our growing team as a ${params.title} and drive key technical initiatives.`,
+      summary: params.overviewSummary || `Join our team as a ${params.title} to drive key initiatives in ${params.department || 'Engineering'}.`,
       responsibilities: [
-        'Design and develop high-availability software services',
-        'Collaborate with cross-functional product teams',
-        'Optimize application performance and reliability',
+        `Architect, build, and scale core services for ${params.title}`,
+        `Utilize ${skillsText || 'modern technology stacks'} to deliver reliable, high-performance features`,
+        'Collaborate closely with cross-functional product, design, and engineering teams',
+        'Establish best practices for technical design, testing, and continuous deployment',
       ],
       requirements: [
-        '3+ years of professional engineering experience',
-        'Proficiency with TypeScript, React, and Node.js',
-        'Strong understanding of database schema design and APIs',
+        params.experienceRequired ? `Experience: ${params.experienceRequired}` : '3+ years of relevant industry experience',
+        skillsText ? `Proficiency with: ${skillsText}` : 'Strong problem-solving abilities and software engineering fundamentals',
+        'Proven track record of delivering robust features in production environments',
+        'Excellent communication, mentorship, and analytical skills',
       ],
       preferredQualifications: [
-        'Experience with cloud deployments and serverless architectures',
+        'Bachelor\'s degree in Computer Science, STEM field, or equivalent experience',
+        'Experience with cloud infrastructure (AWS/GCP), containerization, and modern CI/CD pipelines',
       ],
-      suggestedSalaryRange: { min: 130000, max: 170000 },
+      suggestedSalaryRange: { min: 140000, max: 190000 },
     };
 
     return this.callGeminiJson<GeneratedJobDescription>(prompt, fallback, orgId);

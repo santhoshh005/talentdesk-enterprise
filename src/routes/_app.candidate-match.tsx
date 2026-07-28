@@ -53,10 +53,10 @@ function calculatePositionMatchScore(candidate: any, targetJobTitle: string): nu
   }
 
   // Skill Alignment
-  if (jobNorm.includes('designer') && skills.some(s => ['figma', 'ui', 'ux', 'design', 'prototyping'].includes(s))) score += 12;
-  if (jobNorm.includes('recruiter') && skills.some(s => ['hiring', 'staffing', 'recruitment', 'sourcing', 'talent acquisition'].includes(s))) score += 12;
-  if (jobNorm.includes('frontend') && skills.some(s => ['react', 'typescript', 'tailwind', 'next.js'].includes(s))) score += 12;
-  if (jobNorm.includes('backend') && skills.some(s => ['node.js', 'postgresql', 'system design', 'docker'].includes(s))) score += 12;
+  if (jobNorm.includes('designer') && skills.some((s: string) => ['figma', 'ui', 'ux', 'design', 'prototyping'].includes(s))) score += 12;
+  if (jobNorm.includes('recruiter') && skills.some((s: string) => ['hiring', 'staffing', 'recruitment', 'sourcing', 'talent acquisition'].includes(s))) score += 12;
+  if (jobNorm.includes('frontend') && skills.some((s: string) => ['react', 'typescript', 'tailwind', 'next.js'].includes(s))) score += 12;
+  if (jobNorm.includes('backend') && skills.some((s: string) => ['node.js', 'postgresql', 'system design', 'docker'].includes(s))) score += 12;
 
   // Experience level bonus
   const expYears = candidate.experienceYears || (parseInt(candidate.exp, 10) || 3);
