@@ -1,9 +1,9 @@
-import { Request, Response, NextFunction } from 'express';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import { z } from 'zod';
-import { prisma } from '../lib/prisma';
-import { env } from '../config/env';
+import { Request, Response, NextFunction } from "express";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import { z } from "zod";
+import { prisma } from "../lib/prisma";
+import { env } from "../config/env";
 
 const registerSchema = z.object({
   email: z.string().email(),
@@ -25,16 +25,16 @@ export class AuthController {
 
       const existingUser = await prisma.user.findUnique({ where: { email: data.email } });
       if (existingUser) {
-        res.status(400).json({ success: false, error: 'Email already registered' });
+        res.status(400).json({ success: false, error: "Email already registered" });
         return;
       }
 
-      let org = await prisma.organization.findFirst({ where: { slug: 'talentos-enterprise' } });
+      let org = await prisma.organization.findFirst({ where: { slug: "talentos-enterprise" } });
       if (!org) {
         org = await prisma.organization.create({
           data: {
-            name: data.organizationName || 'My Organization',
-            slug: (data.organizationName || 'my-org').toLowerCase().replace(/\s+/g, '-'),
+            name: data.organizationName || "My Organization",
+            slug: (data.organizationName || "my-org").toLowerCase().replace(/\s+/g, "-"),
           },
         });
       }
@@ -47,20 +47,32 @@ export class AuthController {
           passwordHash,
           firstName: data.firstName,
           lastName: data.lastName,
-          role: 'ADMIN',
+          role: "ADMIN",
           isVerified: true,
         },
       });
 
       const accessToken = jwt.sign(
-        { id: user.id, organizationId: user.organizationId, email: user.email, role: user.role, firstName: user.firstName, lastName: user.lastName },
+        {
+          id: user.id,
+          organizationId: user.organizationId,
+          email: user.email,
+          role: user.role,
+          firstName: user.firstName,
+          lastName: user.lastName,
+        },
         env.JWT_SECRET,
-        { expiresIn: env.JWT_EXPIRES_IN as any }
+        { expiresIn: env.JWT_EXPIRES_IN as any },
       );
 
-      const refreshToken = jwt.sign({ id: user.id }, env.JWT_REFRESH_SECRET, { expiresIn: env.JWT_REFRESH_EXPIRES_IN as any });
+      const refreshToken = jwt.sign({ id: user.id }, env.JWT_REFRESH_SECRET, {
+        expiresIn: env.JWT_REFRESH_EXPIRES_IN as any,
+      });
 
-      res.cookie('accessToken', accessToken, { httpOnly: true, secure: env.NODE_ENV === 'production' });
+      res.cookie("accessToken", accessToken, {
+        httpOnly: true,
+        secure: env.NODE_ENV === "production",
+      });
 
       res.json({
         success: true,
@@ -92,25 +104,37 @@ export class AuthController {
       });
 
       if (!user) {
-        res.status(401).json({ success: false, error: 'Invalid email or password' });
+        res.status(401).json({ success: false, error: "Invalid email or password" });
         return;
       }
 
       const isMatch = await bcrypt.compare(data.password, user.passwordHash);
       if (!isMatch) {
-        res.status(401).json({ success: false, error: 'Invalid email or password' });
+        res.status(401).json({ success: false, error: "Invalid email or password" });
         return;
       }
 
       const accessToken = jwt.sign(
-        { id: user.id, organizationId: user.organizationId, email: user.email, role: user.role, firstName: user.firstName, lastName: user.lastName },
+        {
+          id: user.id,
+          organizationId: user.organizationId,
+          email: user.email,
+          role: user.role,
+          firstName: user.firstName,
+          lastName: user.lastName,
+        },
         env.JWT_SECRET,
-        { expiresIn: env.JWT_EXPIRES_IN as any }
+        { expiresIn: env.JWT_EXPIRES_IN as any },
       );
 
-      const refreshToken = jwt.sign({ id: user.id }, env.JWT_REFRESH_SECRET, { expiresIn: env.JWT_REFRESH_EXPIRES_IN as any });
+      const refreshToken = jwt.sign({ id: user.id }, env.JWT_REFRESH_SECRET, {
+        expiresIn: env.JWT_REFRESH_EXPIRES_IN as any,
+      });
 
-      res.cookie('accessToken', accessToken, { httpOnly: true, secure: env.NODE_ENV === 'production' });
+      res.cookie("accessToken", accessToken, {
+        httpOnly: true,
+        secure: env.NODE_ENV === "production",
+      });
 
       res.json({
         success: true,
@@ -160,7 +184,7 @@ export class AuthController {
   }
 
   static async logout(req: Request, res: Response): Promise<void> {
-    res.clearCookie('accessToken');
-    res.json({ success: true, message: 'Logged out successfully' });
+    res.clearCookie("accessToken");
+    res.json({ success: true, message: "Logged out successfully" });
   }
 }

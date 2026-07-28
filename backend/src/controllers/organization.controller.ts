@@ -1,5 +1,5 @@
-import { Request, Response, NextFunction } from 'express';
-import { prisma } from '../lib/prisma';
+import { Request, Response, NextFunction } from "express";
+import { prisma } from "../lib/prisma";
 
 export class OrganizationController {
   static async getOrganization(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -14,7 +14,14 @@ export class OrganizationController {
           locations: true,
           teams: true,
           users: {
-            select: { id: true, email: true, firstName: true, lastName: true, role: true, isActive: true },
+            select: {
+              id: true,
+              email: true,
+              firstName: true,
+              lastName: true,
+              role: true,
+              isActive: true,
+            },
           },
         },
       });
@@ -33,7 +40,13 @@ export class OrganizationController {
       const settings = await prisma.organizationSetting.upsert({
         where: { organizationId: orgId },
         update: { careerPageTheme, aiProviderPreference, customDomain, emailSenderName },
-        create: { organizationId: orgId, careerPageTheme, aiProviderPreference, customDomain, emailSenderName },
+        create: {
+          organizationId: orgId,
+          careerPageTheme,
+          aiProviderPreference,
+          customDomain,
+          emailSenderName,
+        },
       });
 
       res.json({ success: true, data: settings });

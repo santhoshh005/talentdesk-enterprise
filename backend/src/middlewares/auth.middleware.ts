@@ -1,8 +1,8 @@
-import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
-import { env } from '../config/env';
-import { prisma } from '../lib/prisma';
-import { UserRoleEnum } from '@prisma/client';
+import { Request, Response, NextFunction } from "express";
+import jwt from "jsonwebtoken";
+import { env } from "../config/env";
+import { prisma } from "../lib/prisma";
+import { UserRoleEnum } from "@prisma/client";
 
 export interface AuthenticatedUser {
   id: string;
@@ -21,14 +21,20 @@ declare global {
   }
 }
 
-export const authenticateJwt = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const authenticateJwt = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
   try {
     const authHeader = req.headers.authorization;
     const tokenFromCookie = req.cookies?.accessToken;
-    const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : tokenFromCookie;
+    const token = authHeader?.startsWith("Bearer ") ? authHeader.substring(7) : tokenFromCookie;
 
     if (!token) {
-      res.status(401).json({ success: false, error: 'Authentication required. No token provided.' });
+      res
+        .status(401)
+        .json({ success: false, error: "Authentication required. No token provided." });
       return;
     }
 
@@ -48,13 +54,13 @@ export const authenticateJwt = async (req: Request, res: Response, next: NextFun
     });
 
     if (!user || !user.isActive) {
-      res.status(401).json({ success: false, error: 'User session invalid or deactivated.' });
+      res.status(401).json({ success: false, error: "User session invalid or deactivated." });
       return;
     }
 
     req.user = user;
     next();
   } catch (error) {
-    res.status(401).json({ success: false, error: 'Invalid or expired access token.' });
+    res.status(401).json({ success: false, error: "Invalid or expired access token." });
   }
 };

@@ -35,9 +35,18 @@ const navItems: Item[] = [
   { label: "Profile", to: "/profile", icon: User },
 ];
 
-export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
+export function CommandPalette({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+}) {
   const navigate = useNavigate();
-  const go = (to: string) => { onOpenChange(false); navigate({ to }); };
+  const go = (to: string) => {
+    onOpenChange(false);
+    navigate({ to });
+  };
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange}>
       <CommandInput placeholder="Search candidates, jobs, actions…" />

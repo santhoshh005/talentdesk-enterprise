@@ -22,8 +22,10 @@ export function AppTopbar({ onOpenPalette }: { onOpenPalette: () => void }) {
 
   const [isDark, setIsDark] = useState(() => {
     if (typeof window !== "undefined") {
-      return document.documentElement.classList.contains("dark") || 
-        localStorage.getItem("theme") === "dark";
+      return (
+        document.documentElement.classList.contains("dark") ||
+        localStorage.getItem("theme") === "dark"
+      );
     }
     return false;
   });
@@ -50,7 +52,9 @@ export function AppTopbar({ onOpenPalette }: { onOpenPalette: () => void }) {
     navigate({ to: "/login" });
   };
 
-  const userInitials = user ? `${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`.toUpperCase() : "U";
+  const userInitials = user
+    ? `${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`.toUpperCase()
+    : "U";
   const fullName = user ? `${user.firstName || ""} ${user.lastName || ""}`.trim() : "User";
   const email = user?.email || "";
 
@@ -69,7 +73,13 @@ export function AppTopbar({ onOpenPalette }: { onOpenPalette: () => void }) {
         </kbd>
       </button>
       <div className="ml-auto flex items-center gap-2">
-        <Button variant="ghost" size="icon" className="size-9 md:hidden" onClick={onOpenPalette} aria-label="Search">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-9 md:hidden"
+          onClick={onOpenPalette}
+          aria-label="Search"
+        >
           <Search className="size-4" />
         </Button>
         <Button
@@ -80,14 +90,23 @@ export function AppTopbar({ onOpenPalette }: { onOpenPalette: () => void }) {
           aria-label="Toggle theme"
           title={isDark ? "Switch to Light mode" : "Switch to Dark mode"}
         >
-          {isDark ? <Sun className="size-4 text-warning" /> : <Moon className="size-4 text-muted-foreground" />}
+          {isDark ? (
+            <Sun className="size-4 text-warning" />
+          ) : (
+            <Moon className="size-4 text-muted-foreground" />
+          )}
         </Button>
         <Separator orientation="vertical" className="mx-1 h-5" />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-2 rounded-md p-1 pl-1.5 hover:bg-secondary transition-colors cursor-pointer" aria-label="Account menu">
+            <button
+              className="flex items-center gap-2 rounded-md p-1 pl-1.5 hover:bg-secondary transition-colors cursor-pointer"
+              aria-label="Account menu"
+            >
               <Avatar className="size-7">
-                <AvatarFallback className="bg-primary text-primary-foreground text-[11px] font-medium">{userInitials}</AvatarFallback>
+                <AvatarFallback className="bg-primary text-primary-foreground text-[11px] font-medium">
+                  {userInitials}
+                </AvatarFallback>
               </Avatar>
             </button>
           </DropdownMenuTrigger>

@@ -1,8 +1,8 @@
-import { Request, Response, NextFunction } from 'express';
-import { z } from 'zod';
-import { prisma } from '../lib/prisma';
-import { ResumeParserService } from '../services/ai/resume-parser.service';
-import { AIProviderService } from '../services/ai/ai-provider.service';
+import { Request, Response, NextFunction } from "express";
+import { z } from "zod";
+import { prisma } from "../lib/prisma";
+import { ResumeParserService } from "../services/ai/resume-parser.service";
+import { AIProviderService } from "../services/ai/ai-provider.service";
 
 const createCandidateSchema = z.object({
   firstName: z.string().min(1),
@@ -20,7 +20,7 @@ const createCandidateSchema = z.object({
 export class CandidateController {
   static async getCandidates(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { search, stage, location, skill, sortBy, page = '1', limit = '50' } = req.query;
+      const { search, stage, location, skill, sortBy, page = "1", limit = "50" } = req.query;
       const orgId = req.user!.organizationId;
 
       const whereClause: any = {
@@ -28,33 +28,33 @@ export class CandidateController {
         isDeleted: false,
       };
 
-      if (stage && stage !== 'All stages') {
+      if (stage && stage !== "All stages") {
         whereClause.stage = String(stage);
       }
 
-      if (location && location !== 'Any location') {
-        whereClause.location = { contains: String(location), mode: 'insensitive' };
+      if (location && location !== "Any location") {
+        whereClause.location = { contains: String(location), mode: "insensitive" };
       }
 
-      if (skill && skill !== 'All skills') {
-        whereClause.skills = { some: { name: { contains: String(skill), mode: 'insensitive' } } };
+      if (skill && skill !== "All skills") {
+        whereClause.skills = { some: { name: { contains: String(skill), mode: "insensitive" } } };
       }
 
       if (search) {
         whereClause.OR = [
-          { firstName: { contains: String(search), mode: 'insensitive' } },
-          { lastName: { contains: String(search), mode: 'insensitive' } },
-          { email: { contains: String(search), mode: 'insensitive' } },
-          { currentRole: { contains: String(search), mode: 'insensitive' } },
-          { skills: { some: { name: { contains: String(search), mode: 'insensitive' } } } },
+          { firstName: { contains: String(search), mode: "insensitive" } },
+          { lastName: { contains: String(search), mode: "insensitive" } },
+          { email: { contains: String(search), mode: "insensitive" } },
+          { currentRole: { contains: String(search), mode: "insensitive" } },
+          { skills: { some: { name: { contains: String(search), mode: "insensitive" } } } },
         ];
       }
 
-      let orderBy: any = { createdAt: 'desc' };
-      if (sortBy === 'score_desc') orderBy = { qualityScore: 'desc' };
-      if (sortBy === 'score_asc') orderBy = { qualityScore: 'asc' };
-      if (sortBy === 'exp_desc') orderBy = { experienceYears: 'desc' };
-      if (sortBy === 'name_asc') orderBy = { firstName: 'asc' };
+      let orderBy: any = { createdAt: "desc" };
+      if (sortBy === "score_desc") orderBy = { qualityScore: "desc" };
+      if (sortBy === "score_asc") orderBy = { qualityScore: "asc" };
+      if (sortBy === "exp_desc") orderBy = { experienceYears: "desc" };
+      if (sortBy === "name_asc") orderBy = { firstName: "asc" };
 
       const p = parseInt(String(page), 10);
       const l = parseInt(String(limit), 10);
@@ -81,13 +81,13 @@ export class CandidateController {
         firstName: c.firstName,
         lastName: c.lastName,
         email: c.email,
-        role: c.currentRole || (c.applications[0]?.job.title || 'Applicant'),
-        loc: c.location || 'Remote',
+        role: c.currentRole || c.applications[0]?.job.title || "Applicant",
+        loc: c.location || "Remote",
         exp: `${c.experienceYears || 3}y`,
         experienceYears: c.experienceYears,
         skills: c.skills.map((s) => s.name),
         score: c.qualityScore || 85,
-        stage: c.stage || 'Applied',
+        stage: c.stage || "Applied",
         aiSummary: c.aiSummary,
       }));
 
@@ -129,7 +129,7 @@ export class CandidateController {
       });
 
       if (!candidate) {
-        res.status(404).json({ success: false, error: 'Candidate not found' });
+        res.status(404).json({ success: false, error: "Candidate not found" });
         return;
       }
 
@@ -146,20 +146,26 @@ export class CandidateController {
 
       let aiSummaryData;
       try {
-        aiSummaryData = await AIProviderService.summarizeResume(data.summary || `${data.firstName} ${data.lastName} resume`, orgId);
+        aiSummaryData = await AIProviderService.summarizeResume(
+          data.summary || `${data.firstName} ${data.lastName} resume`,
+          orgId,
+        );
       } catch (err) {
         aiSummaryData = {
-          professionalSummary: `${data.firstName} ${data.lastName} is a professional in ${data.currentRole || 'software development'}.`,
+          professionalSummary: `${data.firstName} ${data.lastName} is a professional in ${data.currentRole || "software development"}.`,
           resumeQualityScore: 90,
         };
       }
 
-      const extractedSkills = data.skills && data.skills.length > 0 ? data.skills : ['TypeScript', 'React', 'Node.js', 'System Design'];
+      const extractedSkills =
+        data.skills && data.skills.length > 0
+          ? data.skills
+          : ["TypeScript", "React", "Node.js", "System Design"];
 
       const existingCandidate = await prisma.candidate.findFirst({
         where: {
           organizationId: orgId,
-          email: { equals: data.email, mode: 'insensitive' },
+          email: { equals: data.email, mode: "insensitive" },
         },
       });
 
@@ -173,7 +179,10 @@ export class CandidateController {
             phone: data.phone || existingCandidate.phone,
             location: data.location || existingCandidate.location,
             currentRole: data.currentRole || existingCandidate.currentRole,
-            experienceYears: data.experienceYears !== undefined ? data.experienceYears : existingCandidate.experienceYears,
+            experienceYears:
+              data.experienceYears !== undefined
+                ? data.experienceYears
+                : existingCandidate.experienceYears,
             summary: data.summary || existingCandidate.summary,
             aiSummary: aiSummaryData?.professionalSummary || existingCandidate.aiSummary,
             qualityScore: aiSummaryData?.resumeQualityScore || existingCandidate.qualityScore || 90,
@@ -181,31 +190,72 @@ export class CandidateController {
           include: { skills: true },
         });
 
-        res.status(200).json({ success: true, data: updatedCandidate, message: 'Candidate details updated successfully' });
+        res.status(200).json({
+          success: true,
+          data: updatedCandidate,
+          message: "Candidate details updated successfully",
+        });
         return;
       }
 
-      const candidate = await prisma.candidate.create({
-        data: {
-          organizationId: orgId,
-          firstName: data.firstName,
-          lastName: data.lastName,
-          email: data.email,
-          phone: data.phone,
-          location: data.location,
-          currentRole: data.currentRole,
-          experienceYears: data.experienceYears || 0,
-          summary: data.summary,
-          aiSummary: aiSummaryData?.professionalSummary || `${data.firstName} ${data.lastName} profile`,
-          qualityScore: aiSummaryData?.resumeQualityScore || 90,
-          skills: {
-            create: extractedSkills.map((s) => ({ name: s })),
+      try {
+        const candidate = await prisma.candidate.create({
+          data: {
+            organizationId: orgId,
+            firstName: data.firstName,
+            lastName: data.lastName,
+            email: data.email,
+            phone: data.phone,
+            location: data.location,
+            currentRole: data.currentRole,
+            experienceYears: data.experienceYears || 0,
+            summary: data.summary,
+            aiSummary:
+              aiSummaryData?.professionalSummary || `${data.firstName} ${data.lastName} profile`,
+            qualityScore: aiSummaryData?.resumeQualityScore || 90,
+            skills: {
+              create: extractedSkills.map((s) => ({ name: s })),
+            },
           },
-        },
-        include: { skills: true },
-      });
+          include: { skills: true },
+        });
 
-      res.status(201).json({ success: true, data: candidate });
+        res.status(201).json({ success: true, data: candidate });
+      } catch (createErr: any) {
+        // Handle P2002 unique constraint violation (race condition safety net)
+        if (createErr?.code === "P2002") {
+          const fallback = await prisma.candidate.findFirst({
+            where: { organizationId: orgId, email: data.email },
+            include: { skills: true },
+          });
+          if (fallback) {
+            const updated = await prisma.candidate.update({
+              where: { id: fallback.id },
+              data: {
+                isDeleted: false,
+                firstName: data.firstName || fallback.firstName,
+                lastName: data.lastName || fallback.lastName,
+                phone: data.phone || fallback.phone,
+                location: data.location || fallback.location,
+                currentRole: data.currentRole || fallback.currentRole,
+                experienceYears:
+                  data.experienceYears !== undefined
+                    ? data.experienceYears
+                    : fallback.experienceYears,
+                summary: data.summary || fallback.summary,
+              },
+              include: { skills: true },
+            });
+            res.status(200).json({
+              success: true,
+              data: updated,
+              message: "Candidate updated (already existed)",
+            });
+            return;
+          }
+        }
+        throw createErr;
+      }
     } catch (err) {
       next(err);
     }
@@ -217,21 +267,24 @@ export class CandidateController {
       const orgId = req.user!.organizationId;
 
       if (!file) {
-        res.status(400).json({ success: false, error: 'No resume file uploaded' });
+        res.status(400).json({ success: false, error: "No resume file uploaded" });
         return;
       }
 
       const parsed = await ResumeParserService.parseBuffer(file.buffer, file.originalname);
-      const aiSummary = await AIProviderService.summarizeResume(parsed.summary || file.originalname);
+      const aiSummary = await AIProviderService.summarizeResume(
+        parsed.summary || file.originalname,
+      );
 
       let candidate = await prisma.candidate.findFirst({
         where: { organizationId: orgId, email: parsed.email },
         include: { skills: true },
       });
 
-      const extractedSkills = parsed.skills && parsed.skills.length > 0 
-        ? parsed.skills 
-        : ['Hiring', 'Staffing', 'Recruitment', 'TypeScript', 'React', 'Node.js'];
+      const extractedSkills =
+        parsed.skills && parsed.skills.length > 0
+          ? parsed.skills
+          : ["Hiring", "Staffing", "Recruitment", "TypeScript", "React", "Node.js"];
 
       if (!candidate) {
         candidate = await prisma.candidate.create({
@@ -242,7 +295,7 @@ export class CandidateController {
             email: parsed.email,
             phone: parsed.phone,
             location: parsed.location,
-            currentRole: parsed.experience[0]?.title || parsed.currentRole || 'Software Engineer',
+            currentRole: parsed.experience[0]?.title || parsed.currentRole || "Software Engineer",
             experienceYears: parsed.experienceYears || 5,
             summary: parsed.summary,
             aiSummary: aiSummary.professionalSummary,
@@ -301,7 +354,7 @@ export class CandidateController {
         where: { id },
         data: { isDeleted: true },
       });
-      res.json({ success: true, message: 'Candidate deleted successfully' });
+      res.json({ success: true, message: "Candidate deleted successfully" });
     } catch (err) {
       next(err);
     }
@@ -310,7 +363,17 @@ export class CandidateController {
   static async updateCandidate(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const id = String(req.params.id);
-      const { firstName, lastName, email, phone, location, currentRole, experienceYears, summary, skills } = req.body;
+      const {
+        firstName,
+        lastName,
+        email,
+        phone,
+        location,
+        currentRole,
+        experienceYears,
+        summary,
+        skills,
+      } = req.body;
 
       const updated = await prisma.candidate.update({
         where: { id },
@@ -323,12 +386,13 @@ export class CandidateController {
           ...(currentRole && { currentRole }),
           ...(experienceYears !== undefined && { experienceYears: Number(experienceYears) }),
           ...(summary && { summary }),
-          ...(skills && Array.isArray(skills) && {
-            skills: {
-              deleteMany: {},
-              create: skills.map((s: string) => ({ name: s })),
-            },
-          }),
+          ...(skills &&
+            Array.isArray(skills) && {
+              skills: {
+                deleteMany: {},
+                create: skills.map((s: string) => ({ name: s })),
+              },
+            }),
         },
         include: { skills: true },
       });

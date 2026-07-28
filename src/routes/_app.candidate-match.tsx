@@ -6,11 +6,24 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Search, Sparkles, Loader2, Target } from "lucide-react";
-import { useCandidates, useJobs } from "@/hooks/use-api";
+import { useCandidates, useJobs, useBatchMatchCandidates } from "@/hooks/use-api";
 import { useDebounce } from "@/hooks/use-debounce";
 import { CandidateDetailSheet } from "@/components/candidate-detail-sheet";
 import { toast } from "sonner";
@@ -29,8 +42,8 @@ export const Route = createFileRoute("/_app/candidate-match")({
 });
 
 function calculatePositionMatchScore(candidate: any, targetJobTitle: string): number {
-  const roleNorm = (candidate.role || '').toLowerCase();
-  const jobNorm = (targetJobTitle || '').toLowerCase();
+  const roleNorm = (candidate.role || "").toLowerCase();
+  const jobNorm = (targetJobTitle || "").toLowerCase();
   const skills = (candidate.skills || []).map((s: string) => String(s).toLowerCase());
 
   let score = 55;
@@ -39,27 +52,48 @@ function calculatePositionMatchScore(candidate: any, targetJobTitle: string): nu
   if (roleNorm.includes(jobNorm) || jobNorm.includes(roleNorm)) {
     score += 30;
   } else if (
-    (jobNorm.includes('recruiter') && roleNorm.includes('recruiter')) ||
-    (jobNorm.includes('designer') && roleNorm.includes('designer')) ||
-    (jobNorm.includes('frontend') && (roleNorm.includes('frontend') || roleNorm.includes('react'))) ||
-    (jobNorm.includes('backend') && (roleNorm.includes('backend') || roleNorm.includes('node')))
+    (jobNorm.includes("recruiter") && roleNorm.includes("recruiter")) ||
+    (jobNorm.includes("designer") && roleNorm.includes("designer")) ||
+    (jobNorm.includes("frontend") &&
+      (roleNorm.includes("frontend") || roleNorm.includes("react"))) ||
+    (jobNorm.includes("backend") && (roleNorm.includes("backend") || roleNorm.includes("node")))
   ) {
     score += 25;
   } else if (
-    (jobNorm.includes('designer') && (roleNorm.includes('recruiter') || roleNorm.includes('engineer'))) ||
-    (jobNorm.includes('recruiter') && (roleNorm.includes('designer') || roleNorm.includes('engineer')))
+    (jobNorm.includes("designer") &&
+      (roleNorm.includes("recruiter") || roleNorm.includes("engineer"))) ||
+    (jobNorm.includes("recruiter") &&
+      (roleNorm.includes("designer") || roleNorm.includes("engineer")))
   ) {
     score -= 20; // Major domain mismatch
   }
 
   // Skill Alignment
-  if (jobNorm.includes('designer') && skills.some((s: string) => ['figma', 'ui', 'ux', 'design', 'prototyping'].includes(s))) score += 12;
-  if (jobNorm.includes('recruiter') && skills.some((s: string) => ['hiring', 'staffing', 'recruitment', 'sourcing', 'talent acquisition'].includes(s))) score += 12;
-  if (jobNorm.includes('frontend') && skills.some((s: string) => ['react', 'typescript', 'tailwind', 'next.js'].includes(s))) score += 12;
-  if (jobNorm.includes('backend') && skills.some((s: string) => ['node.js', 'postgresql', 'system design', 'docker'].includes(s))) score += 12;
+  if (
+    jobNorm.includes("designer") &&
+    skills.some((s: string) => ["figma", "ui", "ux", "design", "prototyping"].includes(s))
+  )
+    score += 12;
+  if (
+    jobNorm.includes("recruiter") &&
+    skills.some((s: string) =>
+      ["hiring", "staffing", "recruitment", "sourcing", "talent acquisition"].includes(s),
+    )
+  )
+    score += 12;
+  if (
+    jobNorm.includes("frontend") &&
+    skills.some((s: string) => ["react", "typescript", "tailwind", "next.js"].includes(s))
+  )
+    score += 12;
+  if (
+    jobNorm.includes("backend") &&
+    skills.some((s: string) => ["node.js", "postgresql", "system design", "docker"].includes(s))
+  )
+    score += 12;
 
   // Experience level bonus
-  const expYears = candidate.experienceYears || (parseInt(candidate.exp, 10) || 3);
+  const expYears = candidate.experienceYears || parseInt(candidate.exp, 10) || 3;
   if (expYears >= 5) score += 5;
 
   return Math.min(98, Math.max(38, score));
@@ -88,26 +122,42 @@ function MatchPage() {
   const { data: candidatesRes, isLoading: isLoadingCandidates, refetch } = useCandidates(filters);
   const rawCandidates = candidatesRes?.data || [];
 
-  // Dynamically calculate match score against the selected target position
-  const candidates = rawCandidates.map((c: any) => ({
-    ...c,
-    calculatedScore: calculatePositionMatchScore(c, targetJob),
-  }));
-
-  // Sort candidates
-  if (sortBy === "score_desc") candidates.sort((a: any, b: any) => b.calculatedScore - a.calculatedScore);
-  if (sortBy === "score_asc") candidates.sort((a: any, b: any) => a.calculatedScore - b.calculatedScore);
-  if (sortBy === "exp_desc") candidates.sort((a: any, b: any) => (b.experienceYears || 0) - (a.experienceYears || 0));
-  if (sortBy === "name_asc") candidates.sort((a: any, b: any) => (a.name || "").localeCompare(b.name || ""));
+  const [aiScores, setAiScores] = useState<Record<string, number>>({});
+  const batchMatch = useBatchMatchCandidates();
 
   const handleReRunMatch = async () => {
     try {
-      await refetch();
-      toast.success(`Match scores re-calculated specifically for "${targetJob}"`);
+      const res = await batchMatch.mutateAsync({
+        candidates: rawCandidates,
+        jobTitle: targetJob,
+      });
+      if (res.data) {
+        setAiScores(res.data);
+        toast.success(`Match scores calculated specifically for "${targetJob}" using AI`);
+      }
     } catch (error) {
-      toast.error("Failed to update match scores");
+      toast.error("Failed to calculate AI match scores");
     }
   };
+
+  // Dynamically calculate match score
+  const candidates = rawCandidates.map((c: any) => ({
+    ...c,
+    calculatedScore:
+      aiScores[c.id] !== undefined ? aiScores[c.id] : calculatePositionMatchScore(c, targetJob),
+  }));
+
+  // Sort candidates
+  if (sortBy === "score_desc")
+    candidates.sort((a: any, b: any) => b.calculatedScore - a.calculatedScore);
+  if (sortBy === "score_asc")
+    candidates.sort((a: any, b: any) => a.calculatedScore - b.calculatedScore);
+  if (sortBy === "exp_desc")
+    candidates.sort((a: any, b: any) => (b.experienceYears || 0) - (a.experienceYears || 0));
+  if (sortBy === "name_asc")
+    candidates.sort((a: any, b: any) =>
+      (a.firstName || a.name || "").localeCompare(b.firstName || b.name || ""),
+    );
 
   return (
     <div className="flex flex-col gap-6">
@@ -115,8 +165,17 @@ function MatchPage() {
         title="Candidate matching"
         description={`AI match scores calculated specifically against position: ${targetJob}`}
         actions={
-          <Button size="sm" className="gap-1.5" onClick={handleReRunMatch} disabled={isLoadingCandidates}>
-            {isLoadingCandidates ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />} 
+          <Button
+            size="sm"
+            className="gap-1.5"
+            onClick={handleReRunMatch}
+            disabled={batchMatch.isPending || isLoadingCandidates}
+          >
+            {batchMatch.isPending || isLoadingCandidates ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Sparkles className="size-4" />
+            )}
             Re-calculate scores
           </Button>
         }
@@ -127,18 +186,24 @@ function MatchPage() {
         <div className="flex items-center gap-2 rounded-lg border border-primary/40 bg-primary/5 p-1 px-2.5 text-xs font-semibold text-primary">
           <Target className="size-4 shrink-0" /> Target Position:
           <Select value={targetJob} onValueChange={setTargetJob}>
-            <SelectTrigger className="w-[200px] h-8 font-bold bg-background text-foreground border-border"><SelectValue placeholder="Select position..." /></SelectTrigger>
+            <SelectTrigger className="w-[200px] h-8 font-bold bg-background text-foreground border-border">
+              <SelectValue placeholder="Select position..." />
+            </SelectTrigger>
             <SelectContent>
               {jobsList.length > 0 ? (
                 jobsList.map((j: any) => (
-                  <SelectItem key={j.id} value={j.title}>{j.title}</SelectItem>
+                  <SelectItem key={j.id} value={j.title}>
+                    {j.title}
+                  </SelectItem>
                 ))
               ) : (
                 <>
                   <SelectItem value="Senior Product Designer">Senior Product Designer</SelectItem>
                   <SelectItem value="Senior Frontend Engineer">Senior Frontend Engineer</SelectItem>
                   <SelectItem value="Staff Backend Engineer">Staff Backend Engineer</SelectItem>
-                  <SelectItem value="Technical Product Manager">Technical Product Manager</SelectItem>
+                  <SelectItem value="Technical Product Manager">
+                    Technical Product Manager
+                  </SelectItem>
                   <SelectItem value="IT Recruiter">IT Recruiter</SelectItem>
                 </>
               )}
@@ -149,9 +214,9 @@ function MatchPage() {
         {/* Search */}
         <div className="relative flex-1 min-w-[180px] max-w-md">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input 
-            placeholder="Search candidates…" 
-            className="pl-8 h-9" 
+          <Input
+            placeholder="Search candidates…"
+            className="pl-8 h-9"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -159,7 +224,9 @@ function MatchPage() {
 
         {/* Skill Filter */}
         <Select value={skillFilter} onValueChange={setSkillFilter}>
-          <SelectTrigger className="w-[130px] h-9"><SelectValue placeholder="Skill" /></SelectTrigger>
+          <SelectTrigger className="w-[130px] h-9">
+            <SelectValue placeholder="Skill" />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="All skills">All skills</SelectItem>
             <SelectItem value="React">React</SelectItem>
@@ -175,7 +242,9 @@ function MatchPage() {
 
         {/* Location Filter */}
         <Select value={locFilter} onValueChange={setLocFilter}>
-          <SelectTrigger className="w-[130px] h-9"><SelectValue placeholder="Location" /></SelectTrigger>
+          <SelectTrigger className="w-[130px] h-9">
+            <SelectValue placeholder="Location" />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="Any location">Any location</SelectItem>
             <SelectItem value="Remote">Remote</SelectItem>
@@ -188,7 +257,9 @@ function MatchPage() {
 
         {/* Experience Filter */}
         <Select value={expFilter} onValueChange={setExpFilter}>
-          <SelectTrigger className="w-[120px] h-9"><SelectValue placeholder="Experience" /></SelectTrigger>
+          <SelectTrigger className="w-[120px] h-9">
+            <SelectValue placeholder="Experience" />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="Any">Any exp.</SelectItem>
             <SelectItem value="0-2 yrs">0-2 yrs</SelectItem>
@@ -199,7 +270,9 @@ function MatchPage() {
 
         {/* Sort Dropdown */}
         <Select value={sortBy} onValueChange={setSortBy}>
-          <SelectTrigger className="w-[160px] h-9"><SelectValue placeholder="Sort by" /></SelectTrigger>
+          <SelectTrigger className="w-[160px] h-9">
+            <SelectValue placeholder="Sort by" />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="score_desc">Match Score (High-Low)</SelectItem>
             <SelectItem value="score_asc">Match Score (Low-High)</SelectItem>
@@ -218,18 +291,36 @@ function MatchPage() {
                 <TableHead>Skills</TableHead>
                 <TableHead>Experience</TableHead>
                 <TableHead>Location</TableHead>
-                <TableHead className="text-right">Match Score for <span className="font-bold text-foreground">{targetJob}</span></TableHead>
+                <TableHead className="text-right">
+                  Match Score for <span className="font-bold text-foreground">{targetJob}</span>
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoadingCandidates ? (
                 Array.from({ length: 5 }).map((_, idx) => (
                   <TableRow key={idx}>
-                    <TableCell><div className="flex gap-2 items-center"><Skeleton className="size-7 rounded-full" /><div className="space-y-1"><Skeleton className="h-4 w-24" /><Skeleton className="h-3 w-16" /></div></div></TableCell>
-                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-12" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                    <TableCell className="text-right"><Skeleton className="h-4 w-20 ml-auto" /></TableCell>
+                    <TableCell>
+                      <div className="flex gap-2 items-center">
+                        <Skeleton className="size-7 rounded-full" />
+                        <div className="space-y-1">
+                          <Skeleton className="h-4 w-24" />
+                          <Skeleton className="h-3 w-16" />
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-32" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-12" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-16" />
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Skeleton className="h-4 w-20 ml-auto" />
+                    </TableCell>
                   </TableRow>
                 ))
               ) : candidates.length === 0 ? (
@@ -241,13 +332,16 @@ function MatchPage() {
               ) : (
                 candidates.map((r: any) => {
                   const score = r.calculatedScore;
-                  const candidateSkills = (r.skills && r.skills.length > 0) 
-                    ? r.skills 
-                    : (r.role?.toLowerCase().includes("recruiter") ? ["Hiring", "Staffing", "Recruitment"] : ["TypeScript", "React", "Node.js"]);
+                  const candidateSkills =
+                    r.skills && r.skills.length > 0
+                      ? r.skills
+                      : r.role?.toLowerCase().includes("recruiter")
+                        ? ["Hiring", "Staffing", "Recruitment"]
+                        : ["TypeScript", "React", "Node.js"];
 
                   return (
-                    <TableRow 
-                      key={r.id} 
+                    <TableRow
+                      key={r.id}
                       className="cursor-pointer hover:bg-secondary/40"
                       onClick={() => setSelectedCandidateId(r.id)}
                     >
@@ -255,35 +349,53 @@ function MatchPage() {
                         <div className="flex items-center gap-2.5">
                           <Avatar className="size-8">
                             <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
-                              {(r.name || 'C').split(" ").map((n: string) => n[0]).join("")}
+                              {((r.firstName || r.name || "C") + " " + (r.lastName || ""))
+                                .trim()
+                                .split(" ")
+                                .map((n: string) => n[0])
+                                .join("")}
                             </AvatarFallback>
                           </Avatar>
                           <div>
-                            <div className="text-sm font-semibold text-foreground">{r.name}</div>
-                            <div className="text-xs text-muted-foreground">{r.role}</div>
+                            <div className="text-sm font-semibold text-foreground">
+                              {(r.firstName || r.name) + " " + (r.lastName || "")}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {r.currentRole || r.role}
+                            </div>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-1">
                           {candidateSkills.map((s: string) => (
-                            <Badge key={s} variant="secondary" className="rounded-full px-2 py-0 text-[10px] font-medium bg-secondary text-secondary-foreground">
+                            <Badge
+                              key={s}
+                              variant="secondary"
+                              className="rounded-full px-2 py-0 text-[10px] font-medium bg-secondary text-secondary-foreground"
+                            >
                               {s}
                             </Badge>
                           ))}
                         </div>
                       </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{r.exp || `${r.experienceYears || 3}y`}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{r.loc || "Remote"}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {r.experienceYears || r.exp || 0} yrs
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {r.location || r.loc || "Remote"}
+                      </TableCell>
                       <TableCell className="text-right">
                         <div className="inline-flex items-center gap-2">
                           <div className="h-1.5 w-16 overflow-hidden rounded-full bg-secondary">
-                            <div 
-                              className={`h-full ${score >= 80 ? 'bg-primary' : score >= 65 ? 'bg-warning' : 'bg-destructive'}`} 
-                              style={{ width: `${score}%` }} 
+                            <div
+                              className={`h-full ${score >= 80 ? "bg-primary" : score >= 65 ? "bg-warning" : "bg-destructive"}`}
+                              style={{ width: `${score}%` }}
                             />
                           </div>
-                          <span className={`text-sm font-bold tabular-nums ${score >= 80 ? 'text-primary' : score >= 65 ? 'text-warning' : 'text-destructive'}`}>
+                          <span
+                            className={`text-sm font-bold tabular-nums ${score >= 80 ? "text-primary" : score >= 65 ? "text-warning" : "text-destructive"}`}
+                          >
                             {score}%
                           </span>
                         </div>
@@ -297,10 +409,10 @@ function MatchPage() {
         </CardContent>
       </Card>
 
-      <CandidateDetailSheet 
-        candidateId={selectedCandidateId} 
-        open={!!selectedCandidateId} 
-        onOpenChange={(open) => !open && setSelectedCandidateId(null)} 
+      <CandidateDetailSheet
+        candidateId={selectedCandidateId}
+        open={!!selectedCandidateId}
+        onOpenChange={(open) => !open && setSelectedCandidateId(null)}
       />
     </div>
   );

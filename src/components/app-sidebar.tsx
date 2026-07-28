@@ -38,7 +38,15 @@ const aiTools: NavItem[] = [
   { title: "JD Generator", url: "/jd-generator", icon: PenSquare },
 ];
 
-function NavGroup({ label, items, currentPath }: { label: string; items: NavItem[]; currentPath: string }) {
+function NavGroup({
+  label,
+  items,
+  currentPath,
+}: {
+  label: string;
+  items: NavItem[];
+  currentPath: string;
+}) {
   return (
     <SidebarGroup>
       <SidebarGroupLabel className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground/70">
@@ -72,7 +80,7 @@ function NavGroup({ label, items, currentPath }: { label: string; items: NavItem
 export function AppSidebar() {
   const currentPath = useRouterState({ select: (r) => r.location.pathname });
   const { user } = useAuth();
-  
+
   const orgName = user?.organization?.name || "TalentOS Enterprise";
 
   return (
@@ -83,7 +91,9 @@ export function AppSidebar() {
             <Sparkles className="size-4" strokeWidth={2.25} />
           </div>
           <div className="min-w-0 flex-1">
-            <div className="truncate text-sm font-bold text-sidebar-foreground tracking-tight">TalentOS</div>
+            <div className="truncate text-sm font-bold text-sidebar-foreground tracking-tight">
+              TalentOS
+            </div>
             <div className="truncate text-[11px] text-muted-foreground font-medium">{orgName}</div>
           </div>
         </div>
@@ -97,7 +107,11 @@ export function AppSidebar() {
       <SidebarFooter className="border-t border-sidebar-border p-1.5">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={currentPath.startsWith("/profile")} className="h-9 rounded-md text-[13.5px] font-medium">
+            <SidebarMenuButton
+              asChild
+              isActive={currentPath.startsWith("/profile")}
+              className="h-9 rounded-md text-[13.5px] font-medium"
+            >
               <Link to="/profile">
                 <User className="size-4" />
                 <span>Profile</span>

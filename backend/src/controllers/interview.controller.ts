@@ -1,6 +1,6 @@
-import { Request, Response, NextFunction } from 'express';
-import { prisma } from '../lib/prisma';
-import { InterviewStatus } from '@prisma/client';
+import { Request, Response, NextFunction } from "express";
+import { prisma } from "../lib/prisma";
+import { InterviewStatus } from "@prisma/client";
 
 export class InterviewController {
   static async getInterviews(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -18,7 +18,7 @@ export class InterviewController {
           interviewers: { include: { user: true } },
           feedbacks: true,
         },
-        orderBy: { scheduledAt: 'asc' },
+        orderBy: { scheduledAt: "asc" },
       });
 
       res.json({ success: true, data: interviews });
@@ -45,17 +45,19 @@ export class InterviewController {
       }
 
       if (!targetAppId) {
-        res.status(400).json({ success: false, error: 'No active application to schedule interview against' });
+        res
+          .status(400)
+          .json({ success: false, error: "No active application to schedule interview against" });
         return;
       }
 
       const interview = await prisma.interview.create({
         data: {
           applicationId: targetAppId,
-          title: title || 'Technical Architecture Screen',
+          title: title || "Technical Architecture Screen",
           scheduledAt: scheduledAt ? new Date(scheduledAt) : new Date(Date.now() + 86400000 * 2),
           durationMins: durationMins || 45,
-          locationUrl: 'https://meet.google.com/talentos-screen',
+          locationUrl: "https://meet.google.com/talentos-screen",
           status: InterviewStatus.SCHEDULED,
           interviewers: {
             create: [{ userId: req.user!.id }],

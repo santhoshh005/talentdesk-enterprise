@@ -1,6 +1,6 @@
-import { Request, Response, NextFunction } from 'express';
-import { z } from 'zod';
-import { prisma } from '../lib/prisma';
+import { Request, Response, NextFunction } from "express";
+import { z } from "zod";
+import { prisma } from "../lib/prisma";
 
 const moveStageSchema = z.object({
   applicationId: z.string().optional(),
@@ -38,7 +38,8 @@ export class ApplicationController {
         });
 
         if (candidate && job && job.pipelineStages.length > 0) {
-          const targetStage = job.pipelineStages.find((s) => s.name === data.toStageName) || job.pipelineStages[0];
+          const targetStage =
+            job.pipelineStages.find((s) => s.name === data.toStageName) || job.pipelineStages[0];
           application = await prisma.application.upsert({
             where: { jobId_candidateId: { jobId: job.id, candidateId: candidate.id } },
             update: { pipelineStageId: targetStage.id },
@@ -53,12 +54,14 @@ export class ApplicationController {
       }
 
       if (!application) {
-        res.status(404).json({ success: false, error: 'Application or target candidate not found' });
+        res
+          .status(404)
+          .json({ success: false, error: "Application or target candidate not found" });
         return;
       }
 
       let newStageId = application.pipelineStageId;
-      let newStageName = data.toStageName || 'Interview';
+      let newStageName = data.toStageName || "Interview";
 
       if (data.toStageId) {
         const stageObj = await prisma.pipelineStage.findUnique({ where: { id: data.toStageId } });
@@ -97,8 +100,8 @@ export class ApplicationController {
         data: {
           organizationId: req.user!.organizationId,
           userId: req.user!.id,
-          action: 'APPLICATION_STAGE_MOVED',
-          entity: 'Application',
+          action: "APPLICATION_STAGE_MOVED",
+          entity: "Application",
           entityId: application.id,
           details: { from: application.pipelineStage.name, to: newStageName },
         },

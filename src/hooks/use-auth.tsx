@@ -18,7 +18,13 @@ interface AuthContextType {
   rememberMe: boolean;
   setRememberMe: (val: boolean) => void;
   login: (email: string, password: string, remember?: boolean) => Promise<void>;
-  register: (data: { email: string; password: string; firstName: string; lastName: string; organizationName?: string }) => Promise<void>;
+  register: (data: {
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+    organizationName?: string;
+  }) => Promise<void>;
   logout: () => Promise<void>;
   setUser: (user: User | null) => void;
 }
@@ -39,11 +45,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!isClient) return;
     const token = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
     const savedUser = localStorage.getItem("user") || sessionStorage.getItem("user");
-    
+
     if (savedUser) {
       try {
         setUser(JSON.parse(savedUser));
-      } catch (e) {}
+      } catch (e) {
+        console.error("Failed to parse saved user", e);
+      }
     }
 
     if (!token) {
@@ -51,11 +59,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    api.me()
+    api
+      .me()
       .then((res: any) => {
         if (res.data?.user) {
           setUser(res.data.user);
-          const storage = localStorage.getItem("rememberMe") === "false" ? sessionStorage : localStorage;
+          const storage =
+            localStorage.getItem("rememberMe") === "false" ? sessionStorage : localStorage;
           storage.setItem("user", JSON.stringify(res.data.user));
         }
       })
@@ -86,22 +96,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const register = useCallback(async (data: { email: string; password: string; firstName: string; lastName: string; organizationName?: string }) => {
-    const res = await api.register(data);
-    if (res.data?.accessToken) {
-      localStorage.setItem("accessToken", res.data.accessToken);
-      if (res.data.refreshToken) {
-        localStorage.setItem("refreshToken", res.data.refreshToken);
+  const register = useCallback(
+    async (data: {
+      email: string;
+      password: string;
+      firstName: string;
+      lastName: string;
+      organizationName?: string;
+    }) => {
+      const res = await api.register(data);
+      if (res.data?.accessToken) {
+        localStorage.setItem("accessToken", res.data.accessToken);
+        if (res.data.refreshToken) {
+          localStorage.setItem("refreshToken", res.data.refreshToken);
+        }
+        if (res.data.user) {
+          localStorage.setItem("user", JSON.stringify(res.data.user));
+          setUser(res.data.user);
+        }
       }
-      if (res.data.user) {
-        localStorage.setItem("user", JSON.stringify(res.data.user));
-        setUser(res.data.user);
-      }
-    }
-  }, []);
+    },
+    [],
+  );
 
   const logout = useCallback(async () => {
-    try { await api.logout(); } catch { /* ignore */ }
+    try {
+      await api.logout();
+    } catch {
+      /* ignore */
+    }
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
     localStorage.removeItem("user");
@@ -112,7 +135,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, isLoading, rememberMe, setRememberMe, login, register, logout, setUser }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        isAuthenticated: !!user,
+        isLoading,
+        rememberMe,
+        setRememberMe,
+        login,
+        register,
+        logout,
+        setUser,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -121,17 +156,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth() {
   const ctx = useContext(AuthContext);
   if (!ctx) {
-    return {
-      user: null,
-      isAuthenticated: false,
-      isLoading: false,
-      rememberMe: true,
-      setRememberMe: () => {},
-      login: async () => {},
-      register: async () => {},
-      logout: async () => {},
-      setUser: () => {},
-    } as AuthContextType;
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return ctx;
 }

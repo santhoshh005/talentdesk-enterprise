@@ -1,5 +1,11 @@
 import { useState } from "react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,7 +20,11 @@ interface CandidateDetailSheetProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function CandidateDetailSheet({ candidateId, open, onOpenChange }: CandidateDetailSheetProps) {
+export function CandidateDetailSheet({
+  candidateId,
+  open,
+  onOpenChange,
+}: CandidateDetailSheetProps) {
   const { data: candidateData, isLoading } = useCandidate(candidateId || "");
   const candidate = candidateData?.data;
   const [newNote, setNewNote] = useState("");
@@ -22,18 +32,22 @@ export function CandidateDetailSheet({ candidateId, open, onOpenChange }: Candid
 
   const handleAddNote = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newNote.trim() || !candidate?.applications?.[0]?.id) {
+    if (!newNote.trim()) {
       toast.error("Please enter a note");
       return;
     }
-    const appId = candidate.applications[0].id;
+    const appId = candidate.applications?.[0]?.id;
+    if (!appId) {
+      toast.error("Candidate has no active application to attach notes to");
+      return;
+    }
     addNoteMutation.mutate(
       { applicationId: appId, content: newNote },
       {
         onSuccess: () => {
           setNewNote("");
         },
-      }
+      },
     );
   };
 
@@ -50,11 +64,14 @@ export function CandidateDetailSheet({ candidateId, open, onOpenChange }: Candid
               <div className="flex items-center gap-3">
                 <Avatar className="size-12">
                   <AvatarFallback className="bg-primary/10 text-primary font-semibold text-base">
-                    {candidate.firstName?.[0]}{candidate.lastName?.[0]}
+                    {candidate.firstName?.[0]}
+                    {candidate.lastName?.[0]}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <SheetTitle className="text-xl font-bold">{candidate.firstName} {candidate.lastName}</SheetTitle>
+                  <SheetTitle className="text-xl font-bold">
+                    {candidate.firstName} {candidate.lastName}
+                  </SheetTitle>
                   <SheetDescription className="text-sm font-medium text-foreground/80 mt-0.5">
                     {candidate.currentRole || "Candidate"}
                   </SheetDescription>
@@ -66,7 +83,8 @@ export function CandidateDetailSheet({ candidateId, open, onOpenChange }: Candid
             {candidate.aiSummary && (
               <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 space-y-2">
                 <div className="flex items-center gap-2 text-xs font-semibold text-primary">
-                  <Sparkles className="size-4" /> AI Candidate Evaluation ({candidate.qualityScore || 85}% Match)
+                  <Sparkles className="size-4" /> AI Candidate Evaluation (
+                  {candidate.qualityScore || 85}% Match)
                 </div>
                 <p className="text-xs leading-relaxed text-foreground/90">{candidate.aiSummary}</p>
               </div>
@@ -80,28 +98,42 @@ export function CandidateDetailSheet({ candidateId, open, onOpenChange }: Candid
               </div>
               <div className="flex items-center gap-2 text-muted-foreground">
                 <MapPin className="size-3.5 shrink-0" />
-                <span className="truncate text-foreground font-medium">{candidate.location || "Remote"}</span>
+                <span className="truncate text-foreground font-medium">
+                  {candidate.location || "Remote"}
+                </span>
               </div>
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Briefcase className="size-3.5 shrink-0" />
-                <span className="truncate text-foreground font-medium">{candidate.experienceYears || 3} Years Exp</span>
+                <span className="truncate text-foreground font-medium">
+                  {candidate.experienceYears || 3} Years Exp
+                </span>
               </div>
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Phone className="size-3.5 shrink-0" />
-                <span className="truncate text-foreground font-medium">{candidate.phone || "Not provided"}</span>
+                <span className="truncate text-foreground font-medium">
+                  {candidate.phone || "Not provided"}
+                </span>
               </div>
             </div>
 
             {/* Skills */}
             {candidate.skills && candidate.skills.length > 0 && (
               <div className="space-y-1.5">
-                <div className="text-xs font-medium text-muted-foreground">Top Skills & Competencies</div>
+                <div className="text-xs font-medium text-muted-foreground">
+                  Top Skills & Competencies
+                </div>
                 <div className="flex flex-wrap gap-1.5">
-                  {candidate.skills.map((s: any) => (
-                    <span key={s.id || s.name} className="rounded-md bg-secondary px-2.5 py-1 text-xs font-medium text-secondary-foreground">
-                      {s.name}
-                    </span>
-                  ))}
+                  {candidate.skills.map((s: any) => {
+                    const skillName = typeof s === "string" ? s : s.name || "";
+                    return skillName ? (
+                      <span
+                        key={skillName}
+                        className="rounded-md bg-secondary px-2.5 py-1 text-xs font-medium text-secondary-foreground"
+                      >
+                        {skillName}
+                      </span>
+                    ) : null;
+                  })}
                 </div>
               </div>
             )}
@@ -110,14 +142,19 @@ export function CandidateDetailSheet({ candidateId, open, onOpenChange }: Candid
             <Tabs defaultValue="resume" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="resume">Resume & Background</TabsTrigger>
-                <TabsTrigger value="notes">Notes ({candidate.applications?.[0]?.notes?.length || 0})</TabsTrigger>
+                <TabsTrigger value="notes">
+                  Notes ({candidate.applications?.[0]?.notes?.length || 0})
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="resume" className="space-y-4 pt-4">
                 <div className="space-y-2">
-                  <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Executive Summary</div>
+                  <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    Executive Summary
+                  </div>
                   <p className="text-xs text-foreground/90 leading-relaxed bg-secondary/30 p-3 rounded-lg border border-border">
-                    {candidate.summary || `${candidate.firstName} is an experienced professional with background in ${candidate.currentRole || 'software development'}.`}
+                    {candidate.summary ||
+                      `${candidate.firstName} is an experienced professional with background in ${candidate.currentRole || "software development"}.`}
                   </p>
                 </div>
               </TabsContent>
@@ -132,7 +169,12 @@ export function CandidateDetailSheet({ candidateId, open, onOpenChange }: Candid
                     className="text-xs"
                   />
                   <div className="flex justify-end">
-                    <Button type="submit" size="sm" className="gap-1.5 text-xs" disabled={addNoteMutation.isPending}>
+                    <Button
+                      type="submit"
+                      size="sm"
+                      className="gap-1.5 text-xs"
+                      disabled={addNoteMutation.isPending}
+                    >
                       <Send className="size-3" /> Add Note
                     </Button>
                   </div>
@@ -141,16 +183,23 @@ export function CandidateDetailSheet({ candidateId, open, onOpenChange }: Candid
                 <div className="space-y-3 pt-2">
                   {candidate.applications?.[0]?.notes?.length > 0 ? (
                     candidate.applications[0].notes.map((note: any) => (
-                      <div key={note.id} className="rounded-lg border border-border bg-card p-3 space-y-1">
+                      <div
+                        key={note.id}
+                        className="rounded-lg border border-border bg-card p-3 space-y-1"
+                      >
                         <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-                          <span className="font-semibold text-foreground">{note.author?.firstName || "Team Member"}</span>
+                          <span className="font-semibold text-foreground">
+                            {note.author?.firstName || "Team Member"}
+                          </span>
                           <span>{new Date(note.createdAt).toLocaleDateString()}</span>
                         </div>
                         <p className="text-xs text-foreground/90">{note.content}</p>
                       </div>
                     ))
                   ) : (
-                    <div className="text-center py-6 text-xs text-muted-foreground">No notes added yet.</div>
+                    <div className="text-center py-6 text-xs text-muted-foreground">
+                      No notes added yet.
+                    </div>
                   )}
                 </div>
               </TabsContent>

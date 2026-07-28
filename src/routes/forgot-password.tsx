@@ -33,11 +33,22 @@ function ForgotPage() {
     <AuthShell
       title="Reset your password"
       subtitle="Enter your email and we'll send you a reset link."
-      footer={<><Link to="/login" className="font-medium text-primary hover:underline">Back to sign in</Link></>}
+      footer={
+        <>
+          <Link to="/login" className="font-medium text-primary hover:underline">
+            Back to sign in
+          </Link>
+        </>
+      }
     >
       <form className="space-y-4" onSubmit={handleSubmit}>
-        <div className="space-y-1.5"><Label>Work email</Label><Input type="email" required autoComplete="email" /></div>
-        <Button type="submit" className="w-full" disabled={loading}>{loading ? "Sending..." : "Send reset link"}</Button>
+        <div className="space-y-1.5">
+          <Label>Work email</Label>
+          <Input type="email" required autoComplete="email" />
+        </div>
+        <Button type="submit" className="w-full" disabled={loading}>
+          {loading ? "Sending..." : "Send reset link"}
+        </Button>
       </form>
     </AuthShell>
   );

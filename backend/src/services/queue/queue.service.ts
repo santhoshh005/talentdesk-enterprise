@@ -1,7 +1,7 @@
-import { Queue, Worker, Job as BullJob } from 'bullmq';
-import Redis from 'ioredis';
-import { env } from '../../config/env';
-import { logger } from '../../lib/logger';
+import { Queue, Worker, Job as BullJob } from "bullmq";
+import Redis from "ioredis";
+import { env } from "../../config/env";
+import { logger } from "../../lib/logger";
 
 let connection: Redis | null = null;
 let resumeQueue: Queue | null = null;
@@ -12,26 +12,28 @@ try {
     lazyConnect: true,
   });
 
-  resumeQueue = new Queue('resume-processing', { connection });
+  resumeQueue = new Queue("resume-processing", { connection });
 
   new Worker(
-    'resume-processing',
+    "resume-processing",
     async (job: BullJob) => {
-      logger.info({ jobId: job.id, data: job.data }, 'Processing background resume parse job');
+      logger.info({ jobId: job.id, data: job.data }, "Processing background resume parse job");
       // Background task execution logic
     },
-    { connection }
+    { connection },
   );
 } catch (error) {
-  logger.warn('Redis not reachable. Background queues operating in synchronous in-memory fallback mode.');
+  logger.warn(
+    "Redis not reachable. Background queues operating in synchronous in-memory fallback mode.",
+  );
 }
 
 export class QueueService {
   static async addResumeProcessingJob(data: { candidateId: string; fileUrl: string }) {
     if (resumeQueue) {
-      await resumeQueue.add('parse-resume', data);
+      await resumeQueue.add("parse-resume", data);
     } else {
-      logger.info({ data }, 'Synchronous fallback processing for resume job');
+      logger.info({ data }, "Synchronous fallback processing for resume job");
     }
   }
 }

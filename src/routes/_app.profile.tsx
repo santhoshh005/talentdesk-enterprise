@@ -17,8 +17,8 @@ export const Route = createFileRoute("/_app/profile")({
 });
 
 function ProfilePage() {
-  const { user } = useAuth();
-  
+  const { user, setUser } = useAuth();
+
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -36,28 +36,40 @@ function ProfilePage() {
   const orgName = user?.organization?.name || "TalentOS Enterprise";
 
   const handleSaveProfile = () => {
+    if (user) {
+      setUser({ ...user, firstName, lastName, email, role: jobTitle });
+    }
     toast.success("Profile details updated");
   };
 
   return (
     <div className="flex flex-col gap-6 max-w-3xl">
-      <PageHeader title="User Profile" description="Manage your account details and profile information." />
+      <PageHeader
+        title="User Profile"
+        description="Manage your account details and profile information."
+      />
 
       {/* Profile Info Card */}
       <Card className="shadow-xs">
         <CardHeader className="pb-3">
           <div>
             <CardTitle className="text-base font-semibold">Account Information</CardTitle>
-            <CardDescription className="text-xs text-muted-foreground">Your personal account details</CardDescription>
+            <CardDescription className="text-xs text-muted-foreground">
+              Your personal account details
+            </CardDescription>
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex items-center gap-4 border-b border-border pb-5">
             <Avatar className="size-16">
-              <AvatarFallback className="bg-primary text-primary-foreground text-lg font-semibold">{userInitials}</AvatarFallback>
+              <AvatarFallback className="bg-primary text-primary-foreground text-lg font-semibold">
+                {userInitials}
+              </AvatarFallback>
             </Avatar>
             <div>
-              <div className="text-base font-semibold text-foreground">{firstName} {lastName}</div>
+              <div className="text-base font-semibold text-foreground">
+                {firstName} {lastName}
+              </div>
               <div className="text-sm text-muted-foreground">{email}</div>
               <div className="text-xs text-muted-foreground mt-0.5">{orgName}</div>
             </div>
@@ -83,7 +95,9 @@ function ProfilePage() {
           </div>
 
           <div className="flex justify-end gap-2 border-t border-border pt-4">
-            <Button size="sm" onClick={handleSaveProfile}>Save profile</Button>
+            <Button size="sm" onClick={handleSaveProfile}>
+              Save profile
+            </Button>
           </div>
         </CardContent>
       </Card>

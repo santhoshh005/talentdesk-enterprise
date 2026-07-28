@@ -1,6 +1,6 @@
-import { Request, Response, NextFunction } from 'express';
-import { prisma } from '../lib/prisma';
-import { OfferStatus } from '@prisma/client';
+import { Request, Response, NextFunction } from "express";
+import { prisma } from "../lib/prisma";
+import { OfferStatus } from "@prisma/client";
 
 export class OfferController {
   static async getOffers(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -32,12 +32,14 @@ export class OfferController {
       }
 
       if (!targetAppId) {
-        const app = await prisma.application.findFirst({ where: { job: { organizationId: req.user!.organizationId } } });
+        const app = await prisma.application.findFirst({
+          where: { job: { organizationId: req.user!.organizationId } },
+        });
         targetAppId = app?.id;
       }
 
       if (!targetAppId) {
-        res.status(400).json({ success: false, error: 'No application found to generate offer' });
+        res.status(400).json({ success: false, error: "No application found to generate offer" });
         return;
       }
 
@@ -47,7 +49,7 @@ export class OfferController {
           createdById: req.user!.id,
           salary: salary || 185000,
           bonus: bonus || 20000,
-          stockOptions: stockOptions || '10,000 RSUs',
+          stockOptions: stockOptions || "10,000 RSUs",
           startDate: startDate ? new Date(startDate) : new Date(Date.now() + 86400000 * 30),
           status: OfferStatus.APPROVED,
         },
