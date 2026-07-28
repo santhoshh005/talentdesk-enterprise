@@ -113,74 +113,86 @@ async function main() {
   });
 
   // 4. Create Jobs
-  const job1 = await prisma.job.create({
-    data: {
-      organizationId: org.id,
-      departmentId: designDept.id,
-      locationId: locSF.id,
-      title: "Senior Product Designer",
-      code: "DES-001",
-      type: "Full-time",
-      workplaceType: "Hybrid",
-      status: JobStatus.PUBLISHED,
-      description:
-        "We are looking for a Senior Product Designer to lead design systems and core platform experience.",
-      minSalary: 140000,
-      maxSalary: 180000,
-      skills: {
-        create: [
-          { name: "Figma", isRequired: true },
-          { name: "Design Systems", isRequired: true },
-          { name: "User Research", isRequired: false },
-        ],
-      },
-      pipelineStages: {
-        create: [
-          { name: "Applied", type: ApplicationStageType.APPLIED, order: 1 },
-          { name: "Screening", type: ApplicationStageType.SCREENING, order: 2 },
-          { name: "Portfolio Review", type: ApplicationStageType.INTERVIEW, order: 3 },
-          { name: "Interview", type: ApplicationStageType.INTERVIEW, order: 4 },
-          { name: "Offer", type: ApplicationStageType.OFFER, order: 5 },
-          { name: "Hired", type: ApplicationStageType.HIRED, order: 6 },
-        ],
-      },
-    },
+  let job1 = await prisma.job.findFirst({
+    where: { organizationId: org.id, code: "DES-001" },
     include: { pipelineStages: true },
   });
+  if (!job1) {
+    job1 = await prisma.job.create({
+      data: {
+        organizationId: org.id,
+        departmentId: designDept.id,
+        locationId: locSF.id,
+        title: "Senior Product Designer",
+        code: "DES-001",
+        type: "Full-time",
+        workplaceType: "Hybrid",
+        status: JobStatus.PUBLISHED,
+        description:
+          "We are looking for a Senior Product Designer to lead design systems and core platform experience.",
+        minSalary: 140000,
+        maxSalary: 180000,
+        skills: {
+          create: [
+            { name: "Figma", isRequired: true },
+            { name: "Design Systems", isRequired: true },
+            { name: "User Research", isRequired: false },
+          ],
+        },
+        pipelineStages: {
+          create: [
+            { name: "Applied", type: ApplicationStageType.APPLIED, order: 1 },
+            { name: "Screening", type: ApplicationStageType.SCREENING, order: 2 },
+            { name: "Portfolio Review", type: ApplicationStageType.INTERVIEW, order: 3 },
+            { name: "Interview", type: ApplicationStageType.INTERVIEW, order: 4 },
+            { name: "Offer", type: ApplicationStageType.OFFER, order: 5 },
+            { name: "Hired", type: ApplicationStageType.HIRED, order: 6 },
+          ],
+        },
+      },
+      include: { pipelineStages: true },
+    });
+  }
 
-  const job2 = await prisma.job.create({
-    data: {
-      organizationId: org.id,
-      departmentId: engDept.id,
-      locationId: locNY.id,
-      title: "Staff Backend Engineer",
-      code: "ENG-002",
-      type: "Full-time",
-      workplaceType: "Hybrid",
-      status: JobStatus.PUBLISHED,
-      description: "Architect scalable distributed backend services using Node.js, Go, and Kafka.",
-      minSalary: 190000,
-      maxSalary: 240000,
-      skills: {
-        create: [
-          { name: "Go", isRequired: true },
-          { name: "Node.js", isRequired: true },
-          { name: "Kafka", isRequired: true },
-          { name: "AWS", isRequired: true },
-        ],
-      },
-      pipelineStages: {
-        create: [
-          { name: "Applied", type: ApplicationStageType.APPLIED, order: 1 },
-          { name: "Recruiter Screen", type: ApplicationStageType.SCREENING, order: 2 },
-          { name: "System Design", type: ApplicationStageType.INTERVIEW, order: 3 },
-          { name: "Offer", type: ApplicationStageType.OFFER, order: 4 },
-          { name: "Hired", type: ApplicationStageType.HIRED, order: 5 },
-        ],
-      },
-    },
+  let job2 = await prisma.job.findFirst({
+    where: { organizationId: org.id, code: "ENG-002" },
     include: { pipelineStages: true },
   });
+  if (!job2) {
+    job2 = await prisma.job.create({
+      data: {
+        organizationId: org.id,
+        departmentId: engDept.id,
+        locationId: locNY.id,
+        title: "Staff Backend Engineer",
+        code: "ENG-002",
+        type: "Full-time",
+        workplaceType: "Hybrid",
+        status: JobStatus.PUBLISHED,
+        description: "Architect scalable distributed backend services using Node.js, Go, and Kafka.",
+        minSalary: 190000,
+        maxSalary: 240000,
+        skills: {
+          create: [
+            { name: "Go", isRequired: true },
+            { name: "Node.js", isRequired: true },
+            { name: "Kafka", isRequired: true },
+            { name: "AWS", isRequired: true },
+          ],
+        },
+        pipelineStages: {
+          create: [
+            { name: "Applied", type: ApplicationStageType.APPLIED, order: 1 },
+            { name: "Recruiter Screen", type: ApplicationStageType.SCREENING, order: 2 },
+            { name: "System Design", type: ApplicationStageType.INTERVIEW, order: 3 },
+            { name: "Offer", type: ApplicationStageType.OFFER, order: 4 },
+            { name: "Hired", type: ApplicationStageType.HIRED, order: 5 },
+          ],
+        },
+      },
+      include: { pipelineStages: true },
+    });
+  }
 
   // 5. Create Candidates & Applications
   const candidateData = [
@@ -228,77 +240,105 @@ async function main() {
   ];
 
   for (const cData of candidateData) {
-    const candidate = await prisma.candidate.create({
-      data: {
-        organizationId: org.id,
-        firstName: cData.firstName,
-        lastName: cData.lastName,
-        email: cData.email,
-        location: cData.location,
-        currentRole: cData.currentRole,
-        experienceYears: cData.experienceYears,
-        qualityScore: cData.qualityScore,
-        summary: cData.summary,
-        aiSummary: `AI Evaluation: High potential candidate for ${cData.currentRole}. Strengths include ${cData.skills.join(", ")}. Candidate demonstrates proven enterprise tenure.`,
-        stage: cData.stageName,
-        skills: {
-          create: cData.skills.map((s) => ({ name: s, level: "Expert" })),
+    let candidate = await prisma.candidate.findUnique({
+      where: {
+        organizationId_email: {
+          organizationId: org.id,
+          email: cData.email,
         },
       },
     });
+
+    if (!candidate) {
+      candidate = await prisma.candidate.create({
+        data: {
+          organizationId: org.id,
+          firstName: cData.firstName,
+          lastName: cData.lastName,
+          email: cData.email,
+          location: cData.location,
+          currentRole: cData.currentRole,
+          experienceYears: cData.experienceYears,
+          qualityScore: cData.qualityScore,
+          summary: cData.summary,
+          aiSummary: `AI Evaluation: High potential candidate for ${cData.currentRole}. Strengths include ${cData.skills.join(", ")}. Candidate demonstrates proven enterprise tenure.`,
+          stage: cData.stageName,
+          skills: {
+            create: cData.skills.map((s) => ({ name: s, level: "Expert" })),
+          },
+        },
+      });
+    }
 
     const targetJob = cData.jobId === job1.id ? job1 : job2;
     const matchedStage =
       targetJob.pipelineStages.find((s) => s.name === cData.stageName) ||
       targetJob.pipelineStages[0];
 
-    const app = await prisma.application.create({
-      data: {
-        jobId: targetJob.id,
-        candidateId: candidate.id,
-        pipelineStageId: matchedStage.id,
-        matchScore: cData.qualityScore,
-        notes: {
-          create: [
-            {
-              authorId: recruiterUser.id,
-              content: `Initial phone screen passed. Candidate exhibits deep subject matter expertise in ${cData.skills[0]}.`,
-            },
-          ],
+    let app = await prisma.application.findUnique({
+      where: {
+        jobId_candidateId: {
+          jobId: targetJob.id,
+          candidateId: candidate.id,
         },
       },
     });
 
-    // Add interview if stage is Interview
-    if (cData.stageName === "Interview") {
-      await prisma.interview.create({
+    if (!app) {
+      app = await prisma.application.create({
         data: {
-          applicationId: app.id,
-          title: `Technical Deep-Dive & System Architecture`,
-          scheduledAt: new Date(Date.now() + 86400000 * 2),
-          durationMins: 60,
-          locationUrl: "https://meet.google.com/abc-defg-hij",
-          status: InterviewStatus.SCHEDULED,
-          interviewers: {
-            create: [{ userId: recruiterUser.id }],
+          jobId: targetJob.id,
+          candidateId: candidate.id,
+          pipelineStageId: matchedStage.id,
+          matchScore: cData.qualityScore,
+          notes: {
+            create: [
+              {
+                authorId: recruiterUser.id,
+                content: `Initial phone screen passed. Candidate exhibits deep subject matter expertise in ${cData.skills[0]}.`,
+              },
+            ],
           },
         },
       });
+
+      // Add interview if stage is Interview
+      if (cData.stageName === "Interview") {
+        await prisma.interview.create({
+          data: {
+            applicationId: app.id,
+            title: `Technical Deep-Dive & System Architecture`,
+            scheduledAt: new Date(Date.now() + 86400000 * 2),
+            durationMins: 60,
+            locationUrl: "https://meet.google.com/abc-defg-hij",
+            status: InterviewStatus.SCHEDULED,
+            interviewers: {
+              create: [{ userId: recruiterUser.id }],
+            },
+          },
+        });
+      }
     }
 
     // Add offer if stage is Offer
     if (cData.stageName === "Offer") {
-      await prisma.offer.create({
-        data: {
-          applicationId: app.id,
-          createdById: recruiterUser.id,
-          salary: 215000,
-          bonus: 25000,
-          stockOptions: "15,000 RSUs",
-          startDate: new Date(Date.now() + 86400000 * 30),
-          status: OfferStatus.APPROVED,
-        },
+      let offer = await prisma.offer.findFirst({
+        where: { applicationId: app.id },
       });
+      
+      if (!offer) {
+        await prisma.offer.create({
+          data: {
+            applicationId: app.id,
+            createdById: recruiterUser.id,
+            salary: 215000,
+            bonus: 25000,
+            stockOptions: "15,000 RSUs",
+            startDate: new Date(Date.now() + 86400000 * 30),
+            status: OfferStatus.APPROVED,
+          },
+        });
+      }
     }
   }
 
