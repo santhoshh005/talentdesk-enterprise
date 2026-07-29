@@ -165,7 +165,7 @@ function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <Card className="lg:col-span-2 shadow-xs">
+        <Card className="lg:col-span-2 shadow-xs overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <div>
               <CardTitle className="text-base font-semibold">Recent candidates</CardTitle>

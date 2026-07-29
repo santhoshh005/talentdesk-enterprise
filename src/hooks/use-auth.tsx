@@ -46,9 +46,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const token = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
     const savedUser = localStorage.getItem("user") || sessionStorage.getItem("user");
 
+    let hasCachedUser = false;
     if (savedUser) {
       try {
         setUser(JSON.parse(savedUser));
+        hasCachedUser = true;
       } catch (e) {
         console.error("Failed to parse saved user", e);
       }
@@ -57,6 +59,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!token) {
       setIsLoading(false);
       return;
+    }
+
+    if (hasCachedUser) {
+      setIsLoading(false);
     }
 
     api

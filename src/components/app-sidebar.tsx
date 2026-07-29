@@ -21,6 +21,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -47,6 +48,8 @@ function NavGroup({
   items: NavItem[];
   currentPath: string;
 }) {
+  const { setOpenMobile } = useSidebar();
+  
   return (
     <SidebarGroup>
       <SidebarGroupLabel className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground/70">
@@ -63,7 +66,7 @@ function NavGroup({
                   isActive={active}
                   className="h-9 gap-2.5 rounded-md text-[13.5px] font-medium data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-primary"
                 >
-                  <Link to={item.url}>
+                  <Link to={item.url} onClick={() => setOpenMobile(false)}>
                     <item.icon className="size-4" />
                     <span>{item.title}</span>
                   </Link>
@@ -80,6 +83,7 @@ function NavGroup({
 export function AppSidebar() {
   const currentPath = useRouterState({ select: (r) => r.location.pathname });
   const { user } = useAuth();
+  const { setOpenMobile } = useSidebar();
 
   const orgName = user?.organization?.name || "TalentOS Enterprise";
 
@@ -112,7 +116,7 @@ export function AppSidebar() {
               isActive={currentPath.startsWith("/profile")}
               className="h-9 rounded-md text-[13.5px] font-medium"
             >
-              <Link to="/profile">
+              <Link to="/profile" onClick={() => setOpenMobile(false)}>
                 <User className="size-4" />
                 <span>Profile</span>
               </Link>

@@ -276,7 +276,7 @@ function MatchPage() {
         </Select>
       </div>
 
-      <Card className="shadow-xs">
+      <Card className="shadow-xs overflow-hidden">
         <CardContent className="p-0">
           <Table>
             <TableHeader>

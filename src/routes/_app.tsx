@@ -51,7 +51,7 @@ function AppLayout() {
       <SidebarInset className="bg-background">
         <AppTopbar onOpenPalette={() => setOpen(true)} />
         <main className="flex-1">
-          <div className="mx-auto w-full max-w-[1400px] px-6 py-6 lg:px-8 lg:py-8">
+          <div className="mx-auto w-full max-w-[1400px] px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
             <Outlet />
           </div>
         </main>

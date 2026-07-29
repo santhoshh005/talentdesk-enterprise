@@ -19,7 +19,7 @@ export function useDashboardMetrics() {
   return useQuery({
     queryKey: queryKeys.dashboard,
     queryFn: () => api.getDashboardStats(),
-    staleTime: 0,
+    staleTime: 1000 * 60 * 5,
   });
 }
 
@@ -28,7 +28,7 @@ export function useCandidates(filters?: Record<string, string>) {
   return useQuery({
     queryKey: queryKeys.candidates(filters),
     queryFn: () => api.getCandidates(filters),
-    staleTime: 0,
+    staleTime: 1000 * 60 * 5,
   });
 }
 
@@ -37,6 +37,7 @@ export function useCandidate(id: string) {
     queryKey: queryKeys.candidate(id),
     queryFn: () => api.getCandidateById(id),
     enabled: !!id,
+    staleTime: 1000 * 60 * 5,
   });
 }
 
@@ -103,7 +104,7 @@ export function useJobs(filters?: Record<string, string>) {
   return useQuery({
     queryKey: queryKeys.jobs(filters),
     queryFn: () => api.getJobs(filters),
-    staleTime: 0,
+    staleTime: 1000 * 60 * 5,
   });
 }
 
@@ -112,6 +113,7 @@ export function useJob(id: string) {
     queryKey: queryKeys.job(id),
     queryFn: () => api.getJobById(id),
     enabled: !!id,
+    staleTime: 1000 * 60 * 5,
   });
 }
 
