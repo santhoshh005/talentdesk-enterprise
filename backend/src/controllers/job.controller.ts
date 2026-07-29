@@ -167,7 +167,7 @@ export class JobController {
         const dept = await prisma.department.upsert({
           where: { organizationId_name: { organizationId: orgId, name: data.departmentId } },
           update: {},
-          create: { organizationId: orgId, name: data.departmentId }
+          create: { organizationId: orgId, name: data.departmentId },
         });
         finalDepartmentId = dept.id;
       }
@@ -176,11 +176,11 @@ export class JobController {
       if (data.locationId) {
         // Upsert location by name, assuming locationId from frontend is just a city/name string
         let loc = await prisma.location.findFirst({
-          where: { organizationId: orgId, city: { equals: data.locationId, mode: "insensitive" } }
+          where: { organizationId: orgId, city: { equals: data.locationId, mode: "insensitive" } },
         });
         if (!loc) {
           loc = await prisma.location.create({
-            data: { organizationId: orgId, city: data.locationId, country: "US" }
+            data: { organizationId: orgId, city: data.locationId, country: "US" },
           });
         }
         finalLocationId = loc.id;
@@ -229,7 +229,17 @@ export class JobController {
   static async updateJob(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const id = String(req.params.id);
-      const { title, status, description, type, workplaceType, departmentId, locationId, minSalary, maxSalary } = req.body;
+      const {
+        title,
+        status,
+        description,
+        type,
+        workplaceType,
+        departmentId,
+        locationId,
+        minSalary,
+        maxSalary,
+      } = req.body;
       const orgId = req.user!.organizationId;
 
       let validStatus: any = status;
@@ -246,7 +256,7 @@ export class JobController {
         const dept = await prisma.department.upsert({
           where: { organizationId_name: { organizationId: orgId, name: departmentId } },
           update: {},
-          create: { organizationId: orgId, name: departmentId }
+          create: { organizationId: orgId, name: departmentId },
         });
         finalDepartmentId = dept.id;
       }
@@ -254,11 +264,11 @@ export class JobController {
       let finalLocationId = undefined;
       if (locationId) {
         let loc = await prisma.location.findFirst({
-          where: { organizationId: orgId, city: { equals: locationId, mode: "insensitive" } }
+          where: { organizationId: orgId, city: { equals: locationId, mode: "insensitive" } },
         });
         if (!loc) {
           loc = await prisma.location.create({
-            data: { organizationId: orgId, city: locationId, country: "US" }
+            data: { organizationId: orgId, city: locationId, country: "US" },
           });
         }
         finalLocationId = loc.id;

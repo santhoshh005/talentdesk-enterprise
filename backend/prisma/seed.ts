@@ -169,7 +169,8 @@ async function main() {
         type: "Full-time",
         workplaceType: "Hybrid",
         status: JobStatus.PUBLISHED,
-        description: "Architect scalable distributed backend services using Node.js, Go, and Kafka.",
+        description:
+          "Architect scalable distributed backend services using Node.js, Go, and Kafka.",
         minSalary: 190000,
         maxSalary: 240000,
         skills: {
@@ -322,10 +323,10 @@ async function main() {
 
     // Add offer if stage is Offer
     if (cData.stageName === "Offer") {
-      let offer = await prisma.offer.findFirst({
+      const offer = await prisma.offer.findFirst({
         where: { applicationId: app.id },
       });
-      
+
       if (!offer) {
         await prisma.offer.create({
           data: {

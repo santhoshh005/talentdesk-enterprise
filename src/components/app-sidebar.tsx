@@ -49,7 +49,7 @@ function NavGroup({
   currentPath: string;
 }) {
   const { setOpenMobile } = useSidebar();
-  
+
   return (
     <SidebarGroup>
       <SidebarGroupLabel className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground/70">

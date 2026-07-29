@@ -51,6 +51,7 @@ function JDGen() {
     if (searchJobTitle) {
       handleSelectExistingJob(searchJobTitle);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchJobTitle, jobsList.length]);
 
   const generateJD = useGenerateJD();
