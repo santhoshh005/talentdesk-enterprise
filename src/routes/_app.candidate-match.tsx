@@ -336,7 +336,7 @@ function MatchPage() {
                   return (
                     <TableRow
                       key={r.id}
-                      className="cursor-pointer hover:bg-secondary/40"
+                      className="cursor-pointer hover:bg-secondary/40 [content-visibility:auto]"
                       onClick={() => setSelectedCandidateId(r.id)}
                     >
                       <TableCell>

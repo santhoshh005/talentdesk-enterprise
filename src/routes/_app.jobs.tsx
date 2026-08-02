@@ -378,7 +378,7 @@ function JobsPage() {
                 </TableRow>
               ) : (
                 jobs.map((j: any) => (
-                  <TableRow key={j.id} className="hover:bg-secondary/40">
+                  <TableRow key={j.id} className="hover:bg-secondary/40 [content-visibility:auto]">
                     <TableCell className="font-semibold text-foreground">
                       <div>{j.title}</div>
                       <div className="text-[11px] text-muted-foreground font-normal">

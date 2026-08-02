@@ -322,7 +322,7 @@ function CandidatesPage() {
                 return (
                   <TableRow
                     key={c.id}
-                    className="cursor-pointer hover:bg-secondary/20"
+                    className="cursor-pointer hover:bg-secondary/20 [content-visibility:auto]"
                     onClick={() => setSelectedCandidateId(c.id)}
                   >
                     <TableCell>

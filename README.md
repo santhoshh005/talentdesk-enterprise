@@ -1,56 +1,38 @@
 # TalentOS — Enterprise AI Recruitment Platform
 
-Production-ready, enterprise-grade AI Recruitment Platform comparable to Greenhouse, Lever, Ashby, and Workday Recruiting.
-
----
+Production-ready AI Recruitment Platform featuring AI-powered candidate matching, resume parsing, and job description generation.
 
 ## Technical Stack
-
-- **Frontend**: TanStack Start, React 19, TypeScript, Tailwind CSS
-- **Backend API**: Express.js, Node.js, TypeScript, Clean Architecture
-- **Database**: PostgreSQL 16 + Prisma ORM
-- **Background Processing**: Redis + BullMQ
-- **AI Infrastructure**: Multi-provider abstraction layer (OpenAI, Anthropic, Google Gemini)
-- **Containerization**: Docker & Docker Compose
-- **Testing**: Vitest & Playwright
+- **Frontend**: React 19, TypeScript, Vite, TanStack Router, Tailwind CSS
+- **Backend API**: Node.js, Express.js, TypeScript, PostgreSQL (Supabase), Prisma ORM
+- **AI Integration**: Gemini / OpenAI models for candidate parsing and evaluation.
 
 ---
 
-## Quick Start (Local Development)
+## Environment Variables
 
-### 1. Run full stack via Docker Compose:
-```bash
-docker-compose up --build
-```
+To run the platform locally or in production, ensure the following environment variables are configured. 
 
-### 2. Run backend locally:
-```bash
-cd backend
-npm install
-npx prisma db push
-npx ts-node prisma/seed.ts
-npm run dev
-```
-
-### 3. Run frontend locally:
-```bash
-npm install
-npm run dev
+### Backend `.env`
+```env
+PORT=4000
+DATABASE_URL="postgresql://[tenant-id]:[password]@aws-1-ap-south-1.pooler.supabase.com:6543/postgres?schema=public&pgbouncer=true"
+DIRECT_URL="postgresql://postgres:[password]@db.[project-ref].supabase.co:5432/postgres?schema=public"
+JWT_SECRET="your-super-secret-key"
 ```
 
 ---
 
-## Seed Accounts
-
-- **Admin Account**: `admin@talentos.ai` / `Password123!`
-- **Recruiter Account**: `recruiter@talentos.ai` / `Password123!`
+## Deployment URLs
+- **Backend (Render)**: https://talentos-backend-lfkp.onrender.com
+- **Frontend (Vercel)**: Pointed to the backend URL.
 
 ---
 
-## Key Features
+## Role-Based Access Control (Seed Accounts)
 
-- **Candidate Pipeline**: Live Kanban drag-and-drop board with stage audit logs.
-- **AI Resume Parser & Analyzer**: Structured text extraction, resume scoring, and strength evaluation.
-- **Explainable AI Matching**: Weighted skill, experience, and education matching scores.
-- **AI Job Description & Interview Kit Generator**: Automated requisition & question bank creation.
-- **Enterprise Security**: JWT with HTTP-Only Cookies, RBAC, Pino logging, and audit tracking.
+The system supports granular RBAC with the following roles: `SUPER_ADMIN`, `ADMIN`, `RECRUITER`, `HIRING_MANAGER`, `INTERVIEWER`, `VIEWER`. 
+
+For local testing, the following accounts are pre-seeded:
+- **Admin Account (SUPER_ADMIN)**: `admin@talentos.ai` / `Password123!`
+- **Recruiter Account (RECRUITER)**: `recruiter@talentos.ai` / `Password123!`
